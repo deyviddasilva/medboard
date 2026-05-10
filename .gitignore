@@ -1,0 +1,19 @@
+# Dependências e cache
+/vendor/
+*.log
+
+# Configuração local sensível
+config/database.php
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Arquivos temporários PHP
+*.tmp
+gerar_hash.php
+teste.php
