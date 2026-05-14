@@ -75,19 +75,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="campo">
                 <label for="senha">Senha</label>
-                <input
-                    type="password"
-                    id="senha"
-                    name="senha"
-                    placeholder="••••••••"
-                    required
-                >
+                <div class="input-com-icone">
+                    <input
+                        type="password"
+                        id="senha"
+                        name="senha"
+                        placeholder="••••••••"
+                        required
+                    >
+                    <button type="button" id="btn-ver-senha" onclick="toggleSenha()"
+                            title="Mostrar/ocultar senha">
+                        👁
+                    </button>
+                </div>
             </div>
 
             <button type="submit" class="btn-primary btn-block">Entrar</button>
         </form>
 
     </div>
+    <script>
+        function toggleSenha() {
+            const input = document.getElementById('senha');
+            const btn   = document.getElementById('btn-ver-senha');
 
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🙈';
+                btn.title = 'Ocultar senha';
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁';
+                btn.title = 'Mostrar senha';
+            }
+        }
+    </script>       
 </body>
 </html>
