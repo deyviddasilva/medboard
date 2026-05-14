@@ -16,98 +16,102 @@ $sucesso    = '';
 // AÇÃO: SALVAR REGISTRO
 // -----------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'salvar') {
-
-    $id_agenda           = (int)($_POST['id_agenda'] ?? 0);
-    $pacientes_atendidos = (int)($_POST['pacientes_atendidos'] ?? 0);
-    $faltas              = (int)($_POST['faltas'] ?? 0);
-    $cancelamentos       = (int)($_POST['cancelamentos'] ?? 0);
-    $encaixes            = (int)($_POST['encaixes'] ?? 0);
-    $tempo_medio         = (int)($_POST['tempo_medio_consulta'] ?? 0);
-    $hora_real_inicio    = $_POST['hora_real_inicio'] ?? null;
-    $hora_real_fim       = $_POST['hora_real_fim'] ?? null;
-    $situacao            = $_POST['situacao_dia'] ?? 'realizado';
-    $obs                 = trim($_POST['observacao'] ?? '');
-
-    if ($id_agenda === 0) {
-        $erro = 'Selecione um turno para registrar.';
-    } elseif ($pacientes_atendidos < 0 || $faltas < 0 || $cancelamentos < 0 || $encaixes < 0) {
-        $erro = 'Os valores não podem ser negativos.';
+    if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
+        $erro = 'Requisição inválida. Tente novamente.';
     } else {
 
-        // verifica se o turno pertence ao usuário
-        $stmt = $pdo->prepare("
-            SELECT id_agenda FROM agenda_trabalho
-            WHERE id_agenda = ? AND id_usuario = ?
-        ");
-        $stmt->execute([$id_agenda, $id_usuario]);
+        $id_agenda           = (int)($_POST['id_agenda'] ?? 0);
+        $pacientes_atendidos = (int)($_POST['pacientes_atendidos'] ?? 0);
+        $faltas              = (int)($_POST['faltas'] ?? 0);
+        $cancelamentos       = (int)($_POST['cancelamentos'] ?? 0);
+        $encaixes            = (int)($_POST['encaixes'] ?? 0);
+        $tempo_medio         = (int)($_POST['tempo_medio_consulta'] ?? 0);
+        $hora_real_inicio    = $_POST['hora_real_inicio'] ?? null;
+        $hora_real_fim       = $_POST['hora_real_fim'] ?? null;
+        $situacao            = $_POST['situacao_dia'] ?? 'realizado';
+        $obs                 = trim($_POST['observacao'] ?? '');
 
-        if (!$stmt->fetch()) {
-            $erro = 'Turno inválido.';
+        if ($id_agenda === 0) {
+            $erro = 'Selecione um turno para registrar.';
+        } elseif ($pacientes_atendidos < 0 || $faltas < 0 || $cancelamentos < 0 || $encaixes < 0) {
+            $erro = 'Os valores não podem ser negativos.';
         } else {
 
-            // calcula duração real se os horários forem informados
-            $duracao_real = null;
-            if (!empty($hora_real_inicio) && !empty($hora_real_fim)) {
-                $ini = strtotime($hora_real_inicio);
-                $fim = strtotime($hora_real_fim);
-                if ($fim < $ini) $fim += 86400; // virou meia noite
-                $duracao_real = (int)(($fim - $ini) / 60);
-            }
-
-            // verifica se já existe registro para este turno
+            // verifica se o turno pertence ao usuário
             $stmt = $pdo->prepare("
-                SELECT id_registro FROM registro_diario WHERE id_agenda = ?
+                SELECT id_agenda FROM agenda_trabalho
+                WHERE id_agenda = ? AND id_usuario = ?
             ");
-            $stmt->execute([$id_agenda]);
-            $existente = $stmt->fetch();
+            $stmt->execute([$id_agenda, $id_usuario]);
 
-            if ($existente) {
-                // ATUALIZA
+            if (!$stmt->fetch()) {
+                $erro = 'Turno inválido.';
+             } else {
+
+                // calcula duração real se os horários forem informados
+                $duracao_real = null;
+                if (!empty($hora_real_inicio) && !empty($hora_real_fim)) {
+                    $ini = strtotime($hora_real_inicio);
+                    $fim = strtotime($hora_real_fim);
+                    if ($fim < $ini) $fim += 86400; // virou meia noite
+                    $duracao_real = (int)(($fim - $ini) / 60);
+                }
+
+                // verifica se já existe registro para este turno
                 $stmt = $pdo->prepare("
-                    UPDATE registro_diario SET
-                        pacientes_atendidos  = ?,
-                        faltas               = ?,
-                        cancelamentos        = ?,
-                        encaixes             = ?,
-                        tempo_medio_consulta = ?,
-                        hora_real_inicio     = ?,
-                        hora_real_fim        = ?,
-                        duracao_real_minutos = ?,
-                        situacao_dia         = ?,
-                        observacao           = ?
+                    SELECT id_registro FROM registro_diario WHERE id_agenda = ?
+                ");
+                $stmt->execute([$id_agenda]);
+                $existente = $stmt->fetch();
+
+                if ($existente) {
+                    // ATUALIZA
+                    $stmt = $pdo->prepare("
+                        UPDATE registro_diario SET
+                            pacientes_atendidos  = ?,
+                            faltas               = ?,
+                            cancelamentos        = ?,
+                            encaixes             = ?,
+                            tempo_medio_consulta = ?,
+                            hora_real_inicio     = ?,
+                             hora_real_fim        = ?,
+                            duracao_real_minutos = ?,
+                            situacao_dia         = ?,
+                            observacao           = ?
+                        WHERE id_agenda = ?
+                    ");
+                    $stmt->execute([
+                        $pacientes_atendidos, $faltas, $cancelamentos,
+                        $encaixes, $tempo_medio ?: null,
+                        $hora_real_inicio ?: null, $hora_real_fim ?: null,
+                        $duracao_real, $situacao, $obs ?: null,
+                        $id_agenda
+                    ]);
+                    $sucesso = 'Registro atualizado com sucesso!';
+                } else {
+                    // INSERE
+                    $stmt = $pdo->prepare("
+                        INSERT INTO registro_diario
+                            (id_agenda, pacientes_atendidos, faltas, cancelamentos,
+                             encaixes, tempo_medio_consulta, hora_real_inicio,
+                             hora_real_fim, duracao_real_minutos, situacao_dia, observacao)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ");
+                    $stmt->execute([
+                        $id_agenda, $pacientes_atendidos, $faltas, $cancelamentos,
+                        $encaixes, $tempo_medio ?: null,
+                        $hora_real_inicio ?: null, $hora_real_fim ?: null,
+                        $duracao_real, $situacao, $obs ?: null
+                    ]);
+                    $sucesso = 'Registro salvo com sucesso!';
+                }
+
+                // atualiza status da agenda para concluido
+                $pdo->prepare("
+                    UPDATE agenda_trabalho SET status_agenda = 'concluido'
                     WHERE id_agenda = ?
-                ");
-                $stmt->execute([
-                    $pacientes_atendidos, $faltas, $cancelamentos,
-                    $encaixes, $tempo_medio ?: null,
-                    $hora_real_inicio ?: null, $hora_real_fim ?: null,
-                    $duracao_real, $situacao, $obs ?: null,
-                    $id_agenda
-                ]);
-                $sucesso = 'Registro atualizado com sucesso!';
-            } else {
-                // INSERE
-                $stmt = $pdo->prepare("
-                    INSERT INTO registro_diario
-                        (id_agenda, pacientes_atendidos, faltas, cancelamentos,
-                         encaixes, tempo_medio_consulta, hora_real_inicio,
-                         hora_real_fim, duracao_real_minutos, situacao_dia, observacao)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ");
-                $stmt->execute([
-                    $id_agenda, $pacientes_atendidos, $faltas, $cancelamentos,
-                    $encaixes, $tempo_medio ?: null,
-                    $hora_real_inicio ?: null, $hora_real_fim ?: null,
-                    $duracao_real, $situacao, $obs ?: null
-                ]);
-                $sucesso = 'Registro salvo com sucesso!';
+                ")->execute([$id_agenda]);
             }
-
-            // atualiza status da agenda para concluido
-            $pdo->prepare("
-                UPDATE agenda_trabalho SET status_agenda = 'concluido'
-                WHERE id_agenda = ?
-            ")->execute([$id_agenda]);
         }
     }
 }
@@ -246,6 +250,8 @@ $situacoes = [
                         <?php else: ?>
 
                         <form method="POST" action="" class="form-registro">
+                            <input type="hidden" name="csrf_token" 
+                                value="<?= gerar_csrf_token() ?>">
                             <input type="hidden" name="acao" value="salvar">
 
                             <!-- SELEÇÃO DO TURNO -->
@@ -412,6 +418,8 @@ $situacoes = [
                                     <div class="registro-acoes">
                                         <form method="POST"
                                               onsubmit="return confirm('Remover este registro?')">
+                                            <input type="hidden" name="csrf_token" 
+                                                value="<?= gerar_csrf_token() ?>">
                                             <input type="hidden" name="acao" value="excluir">
                                             <input type="hidden" name="id_registro"
                                                    value="<?= $r['id_registro'] ?>">

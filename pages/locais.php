@@ -16,27 +16,31 @@ $sucesso    = '';
 // AÇÃO: CADASTRAR NOVO LOCAL
 // -----------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastrar') {
-
-    $nome    = trim($_POST['nome']    ?? '');
-    $cidade  = trim($_POST['cidade']  ?? '');
-    $endereco = trim($_POST['endereco'] ?? '');
-    $bairro  = trim($_POST['bairro']  ?? '');
-    $obs     = trim($_POST['observacao'] ?? '');
-    $cor     = $_POST['cor_identificacao'] ?? '#3B82F6';
-
-    if (empty($nome) || empty($cidade)) {
-        $erro = 'Nome e cidade são obrigatórios.';
+    if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
+        $erro = 'Requisição inválida. Tente novamente.';
     } else {
-        $stmt = $pdo->prepare("
-            INSERT INTO locais_trabalho 
-                (id_usuario, nome, endereco, bairro, cidade, observacao, cor_identificacao)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ");
-        $stmt->execute([
-            $id_usuario, $nome, $endereco ?: null,
-            $bairro ?: null, $cidade, $obs ?: null, $cor
-        ]);
-        $sucesso = 'Local cadastrado com sucesso!';
+
+        $nome    = trim($_POST['nome']    ?? '');
+        $cidade  = trim($_POST['cidade']  ?? '');
+        $endereco = trim($_POST['endereco'] ?? '');
+        $bairro  = trim($_POST['bairro']  ?? '');
+        $obs     = trim($_POST['observacao'] ?? '');
+        $cor     = $_POST['cor_identificacao'] ?? '#3B82F6';
+
+        if (empty($nome) || empty($cidade)) {
+            $erro = 'Nome e cidade são obrigatórios.';
+        } else {
+            $stmt = $pdo->prepare("
+                INSERT INTO locais_trabalho 
+                    (id_usuario, nome, endereco, bairro, cidade, observacao, cor_identificacao)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ");
+            $stmt->execute([
+                $id_usuario, $nome, $endereco ?: null,
+                $bairro ?: null, $cidade, $obs ?: null, $cor
+            ]);
+            $sucesso = 'Local cadastrado com sucesso!';
+        }
     }
 }
 
@@ -44,20 +48,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
 // AÇÃO: EXCLUIR LOCAL
 // -----------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'excluir') {
-    $id_local = (int)($_POST['id_local'] ?? 0);
+    if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
+        $erro = 'Requisição inválida. Tente novamente.';
+    } else {
 
-    if ($id_local > 0) {
-        // verifica se pertence ao usuário
-        $stmt = $pdo->prepare("
-            SELECT id_local FROM locais_trabalho 
-            WHERE id_local = ? AND id_usuario = ?
-        ");
-        $stmt->execute([$id_local, $id_usuario]);
+        $id_local = (int)($_POST['id_local'] ?? 0);
 
-        if ($stmt->fetch()) {
-            $pdo->prepare("DELETE FROM locais_trabalho WHERE id_local = ?")
-                ->execute([$id_local]);
-            $sucesso = 'Local removido com sucesso!';
+        if ($id_local > 0) {
+            // verifica se pertence ao usuário
+            $stmt = $pdo->prepare("
+                SELECT id_local FROM locais_trabalho 
+                WHERE id_local = ? AND id_usuario = ?
+            ");
+            $stmt->execute([$id_local, $id_usuario]);
+
+            if ($stmt->fetch()) {
+                $pdo->prepare("DELETE FROM locais_trabalho WHERE id_local = ?")
+                    ->execute([$id_local]);
+                $sucesso = 'Local removido com sucesso!';
+            }
         }
     }
 }
@@ -66,20 +75,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'excluir
 // AÇÃO: ATIVAR / DESATIVAR LOCAL
 // -----------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'toggle') {
-    $id_local = (int)($_POST['id_local'] ?? 0);
+    if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
+        $erro = 'Requisição inválida. Tente novamente.';
+    } else {
+        $id_local = (int)($_POST['id_local'] ?? 0);
 
-    $stmt = $pdo->prepare("
-        SELECT ativo FROM locais_trabalho 
-        WHERE id_local = ? AND id_usuario = ?
-    ");
-    $stmt->execute([$id_local, $id_usuario]);
-    $local = $stmt->fetch();
+        $stmt = $pdo->prepare("
+            SELECT ativo FROM locais_trabalho 
+            WHERE id_local = ? AND id_usuario = ?
+        ");
+        $stmt->execute([$id_local, $id_usuario]);
+        $local = $stmt->fetch();
 
-    if ($local) {
-        $novo_status = $local['ativo'] ? 0 : 1;
-        $pdo->prepare("UPDATE locais_trabalho SET ativo = ? WHERE id_local = ?")
-            ->execute([$novo_status, $id_local]);
-        $sucesso = $novo_status ? 'Local ativado!' : 'Local desativado!';
+        if ($local) {
+            $novo_status = $local['ativo'] ? 0 : 1;
+            $pdo->prepare("UPDATE locais_trabalho SET ativo = ? WHERE id_local = ?")
+                ->execute([$novo_status, $id_local]);
+            $sucesso = $novo_status ? 'Local ativado!' : 'Local desativado!';
+        }
     }
 }
 
@@ -129,6 +142,8 @@ $titulo_pagina = 'Locais de Trabalho';
             </div>
             <div class="card-body">
                 <form method="POST" action="" class="form-grid">
+                    <input type="hidden" name="csrf_token" 
+                                value="<?= gerar_csrf_token() ?>">
                     <input type="hidden" name="acao" value="cadastrar">
 
                     <div class="campo">
@@ -214,6 +229,8 @@ $titulo_pagina = 'Locais de Trabalho';
                                 <div class="local-acoes">
                                     <!-- ATIVAR / DESATIVAR -->
                                     <form method="POST" style="display:inline">
+                                        <input type="hidden" name="csrf_token" 
+                                            value="<?= gerar_csrf_token() ?>">
                                         <input type="hidden" name="acao" value="toggle">
                                         <input type="hidden" name="id_local" 
                                                value="<?= $l['id_local'] ?>">
@@ -227,6 +244,8 @@ $titulo_pagina = 'Locais de Trabalho';
                                     <!-- EXCLUIR -->
                                     <form method="POST" style="display:inline"
                                           onsubmit="return confirm('Tem certeza? Isso removerá o local.')">
+                                        <input type="hidden" name="csrf_token" 
+                                            value="<?= gerar_csrf_token() ?>">
                                         <input type="hidden" name="acao" value="excluir">
                                         <input type="hidden" name="id_local" 
                                                value="<?= $l['id_local'] ?>">

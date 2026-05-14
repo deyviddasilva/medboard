@@ -24,56 +24,60 @@ if ($mes > 12) { $mes = 1;  $ano++; }
 // AÇÃO: CADASTRAR TURNO
 // -----------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastrar') {
-
-    $data        = $_POST['data_trabalho'] ?? '';
-    $id_local    = (int)($_POST['id_local'] ?? 0);
-    $turno       = $_POST['turno'] ?? '';
-    $hora_inicio = $_POST['hora_inicio'] ?? '';
-    $hora_fim    = $_POST['hora_fim'] ?? '';
-    $status      = $_POST['status_agenda'] ?? 'agendado';
-    $obs         = trim($_POST['observacao'] ?? '');
-
-    if (empty($data) || $id_local === 0 || empty($turno) || empty($hora_inicio) || empty($hora_fim)) {
-
-        $erro = 'Preencha todos os campos obrigatórios.';
-
+    if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
+        $erro = 'Requisição inválida. Tente novamente.';
     } else {
 
-        // calcula data_fim para turnos que viram o dia
-        $data_fim = null;
+        $data        = $_POST['data_trabalho'] ?? '';
+        $id_local    = (int)($_POST['id_local'] ?? 0);
+        $turno       = $_POST['turno'] ?? '';
+        $hora_inicio = $_POST['hora_inicio'] ?? '';
+        $hora_fim    = $_POST['hora_fim'] ?? '';
+        $status      = $_POST['status_agenda'] ?? 'agendado';
+        $obs         = trim($_POST['observacao'] ?? '');
 
-        if ($hora_fim <= $hora_inicio) {
-            if (in_array($turno, ['noite', 'tarde/noite', 'manha/tarde/noite'])) {
-                $data_fim = date('Y-m-d', strtotime($data . ' +1 day'));
-            } else {
-                $erro = 'O horário de fim deve ser maior que o de início para este turno.';
+        if (empty($data) || $id_local === 0 || empty($turno) || empty($hora_inicio) || empty($hora_fim)) {
+
+            $erro = 'Preencha todos os campos obrigatórios.';
+
+        } else {
+
+            // calcula data_fim para turnos que viram o dia
+            $data_fim = null;
+
+            if ($hora_fim <= $hora_inicio) {
+                if (in_array($turno, ['noite', 'tarde/noite', 'manha/tarde/noite'])) {
+                    $data_fim = date('Y-m-d', strtotime($data . ' +1 day'));
+                } else {
+                    $erro = 'O horário de fim deve ser maior que o de início para este turno.';
+                }
             }
-        }
 
-        if (empty($erro)) {
+            if (empty($erro)) {
 
-            // verifica duplicidade
-            $stmt = $pdo->prepare("
-                SELECT id_agenda FROM agenda_trabalho
-                WHERE id_usuario = ? AND id_local = ? 
-                  AND data_trabalho = ? AND hora_inicio = ?
-            ");
-            $stmt->execute([$id_usuario, $id_local, $data, $hora_inicio]);
-
-            if ($stmt->fetch()) {
-                $erro = 'Já existe um turno cadastrado nesse local, data e horário.';
-            } else {
+                // verifica duplicidade
                 $stmt = $pdo->prepare("
-                    INSERT INTO agenda_trabalho
-                        (id_usuario, id_local, data_trabalho, data_fim, turno,
-                         hora_inicio, hora_fim, status_agenda, observacao)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    SELECT id_agenda FROM agenda_trabalho
+                    WHERE id_usuario = ? AND id_local = ? 
+                      AND data_trabalho = ? AND hora_inicio = ?
                 ");
-                $stmt->execute([
-                    $id_usuario, $id_local, $data, $data_fim, $turno,
-                    $hora_inicio, $hora_fim, $status, $obs ?: null
-                ]);
-                $sucesso = 'Turno cadastrado com sucesso!';
+                $stmt->execute([$id_usuario, $id_local, $data, $hora_inicio]);
+
+                if ($stmt->fetch()) {
+                    $erro = 'Já existe um turno cadastrado nesse local, data e horário.';
+                } else {
+                    $stmt = $pdo->prepare("
+                        INSERT INTO agenda_trabalho
+                            (id_usuario, id_local, data_trabalho, data_fim, turno,
+                             hora_inicio, hora_fim, status_agenda, observacao)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ");
+                    $stmt->execute([
+                        $id_usuario, $id_local, $data, $data_fim, $turno,
+                        $hora_inicio, $hora_fim, $status, $obs ?: null
+                    ]);
+                    $sucesso = 'Turno cadastrado com sucesso!';
+                }
             }
         }
     }
@@ -255,6 +259,10 @@ $titulo_pagina = 'Agenda Mensal';
                     </div>
                     <div class="card-body">
                         <form method="POST" action="" class="form-agenda">
+                    
+                            <input type="hidden" name="csrf_token" 
+                                value="<?= gerar_csrf_token() ?>">
+
                             <input type="hidden" name="acao" value="cadastrar">
 
                             <div class="campo">
@@ -368,6 +376,8 @@ $titulo_pagina = 'Agenda Mensal';
 
                                         <form method="POST"
                                               onsubmit="return confirm('Remover este turno?')">
+                                            <input type="hidden" name="csrf_token" 
+                                                value="<?= gerar_csrf_token() ?>">
                                             <input type="hidden" name="acao" value="excluir">
                                             <input type="hidden" name="id_agenda"
                                                    value="<?= $t['id_agenda'] ?>">

@@ -13,27 +13,32 @@ if (isset($_SESSION['id_usuario'])) {
 // quando o formulário for enviado
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $email = trim($_POST['email'] ?? '');
-    $senha = $_POST['senha'] ?? '';
-
-    if (empty($email) || empty($senha)) {
-        $erro = 'Preencha e-mail e senha.';
-
+    if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
+        $erro = 'Requisição inválida. Tente novamente.';
     } else {
-        $pdo  = conectar();
-        $stmt = $pdo->prepare('SELECT id_usuario, nome, senha FROM usuarios WHERE email = ?');
-        $stmt->execute([$email]);
-        $usuario = $stmt->fetch();
 
-        if ($usuario && password_verify($senha, $usuario['senha'])) {
-            // login correto — salva na sessão
-            $_SESSION['id_usuario'] = $usuario['id_usuario'];
-            $_SESSION['nome']       = $usuario['nome'];
+        $email = trim($_POST['email'] ?? '');
+        $senha = $_POST['senha'] ?? '';
 
-            header('Location: ../index.php');
-            exit;
+        if (empty($email) || empty($senha)) {
+            $erro = 'Preencha e-mail e senha.';
+
         } else {
-            $erro = 'E-mail ou senha incorretos.';
+            $pdo  = conectar();
+            $stmt = $pdo->prepare('SELECT id_usuario, nome, senha FROM usuarios WHERE email = ?');
+            $stmt->execute([$email]);
+            $usuario = $stmt->fetch();
+
+            if ($usuario && password_verify($senha, $usuario['senha'])) {
+                // login correto — salva na sessão
+                $_SESSION['id_usuario'] = $usuario['id_usuario'];
+                $_SESSION['nome']       = $usuario['nome'];
+
+                header('Location: ../index.php');
+                exit;
+            } else {
+                $erro = 'E-mail ou senha incorretos.';
+            }
         }
     }
 }
@@ -60,6 +65,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <form method="POST" action="">
+            <input type="hidden" name="csrf_token" 
+                value="<?= gerar_csrf_token() ?>">
             <div class="campo">
                 <label for="email">E-mail</label>
                 <input
