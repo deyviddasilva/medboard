@@ -1,5 +1,8 @@
 <?php
 session_start();
+// mensagem de timeout
+$msg_timeout = $_SESSION['msg_timeout'] ?? '';
+unset($_SESSION['msg_timeout']);
 require_once '../config/database.php';
 
 $erro = '';
@@ -61,6 +64,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <?php if ($erro): ?>
+            <?php if ($msg_timeout): ?>
+                <div class="alerta alerta-aviso">
+                    ⏱ <?= htmlspecialchars($msg_timeout) ?>
+                </div>
+            <?php endif; ?>
             <div class="alerta alerta-erro"><?= htmlspecialchars($erro) ?></div>
         <?php endif; ?>
 

@@ -1,11 +1,9 @@
 <?php
 session_start();
 require_once '../config/database.php';
+require_once '../includes/auth_check.php';
 
-if (!isset($_SESSION['id_usuario'])) {
-    header('Location: ../auth/login.php');
-    exit;
-}
+verificar_sessao();
 
 $pdo        = conectar();
 $id_usuario = $_SESSION['id_usuario'];
