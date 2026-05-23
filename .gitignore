@@ -17,3 +17,6 @@ Thumbs.db
 *.tmp
 gerar_hash.php
 teste.php
+
+# Dados sensíveis
+database/seed.sql

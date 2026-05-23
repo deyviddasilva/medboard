@@ -26,21 +26,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($email) || empty($senha)) {
             $erro = 'Preencha e-mail e senha.';
 
+        } elseif (!verificar_rate_limit($email)) {
+            $erro = '⚠️ Muitas tentativas. Tente novamente em 15 minutos.';
+
         } else {
             $pdo  = conectar();
-            $stmt = $pdo->prepare('SELECT id_usuario, nome, senha FROM usuarios WHERE email = ?');
+            $stmt = $pdo->prepare('
+                SELECT id_usuario, nome, senha FROM usuarios WHERE email = ?
+            ');
             $stmt->execute([$email]);
             $usuario = $stmt->fetch();
 
             if ($usuario && password_verify($senha, $usuario['senha'])) {
-                // login correto — salva na sessão
+                resetar_tentativas($email);
                 $_SESSION['id_usuario'] = $usuario['id_usuario'];
                 $_SESSION['nome']       = $usuario['nome'];
-
                 header('Location: ../index.php');
                 exit;
             } else {
-                $erro = 'E-mail ou senha incorretos.';
+                registrar_tentativa_falha($email);
+                $restantes = tentativas_restantes($email);
+                $erro = $restantes > 0
+                    ? "E-mail ou senha incorretos. {$restantes} tentativa(s) restante(s)."
+                    : '⚠️ Conta bloqueada por 15 minutos.';
             }
         }
     }

@@ -4,7 +4,7 @@
 // -----------------------------------------------
 
 // tempo máximo de inatividade: 2 horas (em segundos) = 7200
-define('SESSION_TIMEOUT', 14400);
+define('SESSION_TIMEOUT', 7200);
 
 function verificar_sessao(): void {
 
