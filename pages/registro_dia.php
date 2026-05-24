@@ -258,11 +258,26 @@ $situacoes = [
                                 <select name="id_agenda" id="select_turno" required
                                         onchange="preencherHorarios(this)">
                                     <option value="">Selecione o turno...</option>
+
+                                    <?php if ($preload): ?>
+                                        <option value="<?= $preload['id_agenda'] ?>"
+                                                data-inicio="<?= $preload['hora_inicio'] ?>"
+                                                data-fim="<?= $preload['hora_fim'] ?>"
+                                                selected>
+                                            <?= date('d/m/Y', strtotime($preload['data_trabalho'])) ?>
+                                            — <?= htmlspecialchars($preload['local_nome']) ?>
+                                            (<?= ucfirst($preload['turno']) ?>
+                                            <?= date('H:i', strtotime($preload['hora_inicio'])) ?>
+                                            às
+                                            <?= date('H:i', strtotime($preload['hora_fim'])) ?>)
+                                        </option>
+                                    <?php endif; ?>
+
                                     <?php foreach ($turnos_pendentes as $tp): ?>
+                                        <?php if ($preload && $preload['id_agenda'] == $tp['id_agenda']) continue; ?>
                                         <option value="<?= $tp['id_agenda'] ?>"
                                                 data-inicio="<?= $tp['hora_inicio'] ?>"
-                                                data-fim="<?= $tp['hora_fim'] ?>"
-                                            <?= ($preload && $preload['id_agenda'] == $tp['id_agenda']) ? 'selected' : '' ?>>
+                                                data-fim="<?= $tp['hora_fim'] ?>">
                                             <?= date('d/m/Y', strtotime($tp['data_trabalho'])) ?>
                                             — <?= htmlspecialchars($tp['local_nome']) ?>
                                             (<?= ucfirst($tp['turno']) ?>
@@ -271,6 +286,7 @@ $situacoes = [
                                             <?= date('H:i', strtotime($tp['hora_fim'])) ?>)
                                         </option>
                                     <?php endforeach; ?>
+
                                 </select>
                             </div>
 
@@ -414,6 +430,14 @@ $situacoes = [
                                     <?php endif; ?>
 
                                     <div class="registro-acoes">
+
+                                        <!-- EDITAR -->
+                                        <a href="?id_agenda=<?= $r['id_agenda'] ?>"
+                                           class="btn-mini btn-info">
+                                            ✏️ Editar
+                                        </a>
+
+                                        <!-- EXCLUIR -->
                                         <form method="POST"
                                               onsubmit="return confirm('Remover este registro?')">
                                             <input type="hidden" name="csrf_token" 
@@ -423,6 +447,7 @@ $situacoes = [
                                                    value="<?= $r['id_registro'] ?>">
                                             <button class="btn-mini btn-danger">🗑 Remover</button>
                                         </form>
+
                                     </div>
 
                                 </div>
