@@ -1251,3 +1251,83 @@ body {
     color: #0f172a;
     font-weight: 600;
 }
+
+/* -----------------------------------------------
+   LEMBRETES
+----------------------------------------------- */
+.lembrete-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.lembrete-item:last-child {
+    border-bottom: none;
+}
+
+.lembrete-item.atrasado {
+    background: #fff1f2;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #fecdd3;
+}
+
+.lembrete-item.hoje {
+    background: #fffbeb;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #fde68a;
+}
+
+.lembrete-item.concluido {
+    opacity: 0.5;
+}
+
+.lembrete-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 13px;
+    flex: 1;
+}
+
+.lembrete-info strong {
+    color: #0f172a;
+    font-size: 14px;
+}
+
+.lembrete-info span {
+    color: #64748b;
+}
+
+.lembrete-info small {
+    color: #94a3b8;
+}
+
+.lembrete-acoes {
+    display: flex;
+    gap: 6px;
+}
+
+/* -----------------------------------------------
+   TEXTAREA NO FORM-GRID
+----------------------------------------------- */
+.form-grid textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1e293b;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.form-grid textarea:focus {
+    border-color: #3b82f6;
+}
