@@ -1207,3 +1207,8 @@ body {
 .input-com-icone button:hover {
     color: #475569;
 }
+
+.btn-info {
+    background: #dbeafe;
+    color: #1d4ed8;
+}

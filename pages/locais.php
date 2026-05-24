@@ -95,6 +95,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'toggle'
 }
 
 // -----------------------------------------------
+// AÇÃO: ATUALIZAR LOCAL
+// -----------------------------------------------
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'atualizar') {
+    if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
+        $erro = 'Requisição inválida.';
+    } else {
+        $id_local = (int)($_POST['id_local'] ?? 0);
+        $nome     = trim($_POST['nome']      ?? '');
+        $cidade   = trim($_POST['cidade']    ?? '');
+        $endereco = trim($_POST['endereco']  ?? '');
+        $bairro   = trim($_POST['bairro']    ?? '');
+        $obs      = trim($_POST['observacao'] ?? '');
+        $cor      = $_POST['cor_identificacao'] ?? '#3B82F6';
+
+        if (empty($nome) || empty($cidade)) {
+            $erro = 'Nome e cidade são obrigatórios.';
+        } else {
+            $stmt = $pdo->prepare("
+                SELECT id_local FROM locais_trabalho
+                WHERE id_local = ? AND id_usuario = ?
+            ");
+            $stmt->execute([$id_local, $id_usuario]);
+
+            if ($stmt->fetch()) {
+                $pdo->prepare("
+                    UPDATE locais_trabalho SET
+                        nome              = ?,
+                        cidade            = ?,
+                        endereco          = ?,
+                        bairro            = ?,
+                        observacao        = ?,
+                        cor_identificacao = ?
+                    WHERE id_local = ?
+                ")->execute([
+                    $nome, $cidade,
+                    $endereco ?: null,
+                    $bairro   ?: null,
+                    $obs      ?: null,
+                    $cor, $id_local
+                ]);
+                $sucesso = 'Local atualizado com sucesso!';
+            }
+        }
+    }
+}
+
+// pré-carrega local para edição
+$local_editar = null;
+if (!empty($_GET['editar'])) {
+    $stmt = $pdo->prepare("
+        SELECT * FROM locais_trabalho
+        WHERE id_local = ? AND id_usuario = ?
+    ");
+    $stmt->execute([(int)$_GET['editar'], $id_usuario]);
+    $local_editar = $stmt->fetch();
+}
+
+// -----------------------------------------------
 // BUSCA: TODOS OS LOCAIS DO USUÁRIO
 // -----------------------------------------------
 $stmt = $pdo->prepare("
@@ -131,6 +189,68 @@ $titulo_pagina = 'Locais de Trabalho';
         <?php endif; ?>
         <?php if ($sucesso): ?>
             <div class="alerta alerta-sucesso"><?= htmlspecialchars($sucesso) ?></div>
+        <?php endif; ?>
+
+        <?php if ($local_editar): ?>
+        <div class="card" style="border: 2px solid #3b82f6;">
+            <div class="card-header">
+                <h3>✏️ Editando: <?= htmlspecialchars($local_editar['nome']) ?></h3>
+                <a href="locais.php" class="btn-secondary">✕ Cancelar</a>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="" class="form-grid">
+                    <input type="hidden" name="acao" value="atualizar">
+                    <input type="hidden" name="id_local"
+                           value="<?= $local_editar['id_local'] ?>">
+                    <input type="hidden" name="csrf_token"
+                           value="<?= gerar_csrf_token() ?>">
+
+                    <div class="campo">
+                        <label>Nome do local *</label>
+                        <input type="text" name="nome" required
+                               value="<?= htmlspecialchars($local_editar['nome']) ?>">
+                    </div>
+
+                    <div class="campo">
+                        <label>Cidade *</label>
+                        <input type="text" name="cidade" required
+                               value="<?= htmlspecialchars($local_editar['cidade']) ?>">
+                    </div>
+
+                    <div class="campo">
+                        <label>Bairro</label>
+                        <input type="text" name="bairro"
+                               value="<?= htmlspecialchars($local_editar['bairro'] ?? '') ?>">
+                    </div>
+
+                    <div class="campo">
+                        <label>Endereço</label>
+                        <input type="text" name="endereco"
+                               value="<?= htmlspecialchars($local_editar['endereco'] ?? '') ?>">
+                    </div>
+
+                    <div class="campo campo-cor">
+                        <label>Cor de identificação</label>
+                        <div class="cor-grupo">
+                            <input type="color" name="cor_identificacao"
+                                   value="<?= $local_editar['cor_identificacao'] ?>">
+                        </div>
+                    </div>
+
+                    <div class="campo campo-full">
+                        <label>Observação</label>
+                        <input type="text" name="observacao"
+                               value="<?= htmlspecialchars($local_editar['observacao'] ?? '') ?>">
+                    </div>
+
+                    <div class="campo campo-full">
+                        <button type="submit" class="btn-primary">
+                            💾 Salvar alterações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
         <?php endif; ?>
 
         <!-- FORMULÁRIO DE CADASTRO -->
@@ -225,16 +345,19 @@ $titulo_pagina = 'Locais de Trabalho';
                                 </div>
 
                                 <div class="local-acoes">
+                                    <!-- EDITAR -->
+                                    <a href="?editar=<?= $l['id_local'] ?>"
+                                       class="btn-mini btn-info">
+                                        ✏️ Editar
+                                    </a>
+
                                     <!-- ATIVAR / DESATIVAR -->
                                     <form method="POST" style="display:inline">
-                                        <input type="hidden" name="csrf_token" 
-                                            value="<?= gerar_csrf_token() ?>">
                                         <input type="hidden" name="acao" value="toggle">
-                                        <input type="hidden" name="id_local" 
-                                               value="<?= $l['id_local'] ?>">
-                                        <button type="submit" 
-                                                class="btn-mini <?= $l['ativo'] ? 'btn-warning' : 'btn-success' ?>"
-                                                title="<?= $l['ativo'] ? 'Desativar' : 'Ativar' ?>">
+                                        <input type="hidden" name="id_local" value="<?= $l['id_local'] ?>">
+                                        <input type="hidden" name="csrf_token" value="<?= gerar_csrf_token() ?>">
+                                        <button type="submit"
+                                                class="btn-mini <?= $l['ativo'] ? 'btn-warning' : 'btn-success' ?>">
                                             <?= $l['ativo'] ? '⏸ Desativar' : '▶ Ativar' ?>
                                         </button>
                                     </form>
@@ -242,13 +365,10 @@ $titulo_pagina = 'Locais de Trabalho';
                                     <!-- EXCLUIR -->
                                     <form method="POST" style="display:inline"
                                           onsubmit="return confirm('Tem certeza? Isso removerá o local.')">
-                                        <input type="hidden" name="csrf_token" 
-                                            value="<?= gerar_csrf_token() ?>">
                                         <input type="hidden" name="acao" value="excluir">
-                                        <input type="hidden" name="id_local" 
-                                               value="<?= $l['id_local'] ?>">
-                                        <button type="submit" class="btn-mini btn-danger"
-                                                title="Excluir">
+                                        <input type="hidden" name="id_local" value="<?= $l['id_local'] ?>">
+                                        <input type="hidden" name="csrf_token" value="<?= gerar_csrf_token() ?>">
+                                        <button type="submit" class="btn-mini btn-danger">
                                             🗑 Excluir
                                         </button>
                                     </form>
