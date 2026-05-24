@@ -1212,3 +1212,42 @@ body {
     background: #dbeafe;
     color: #1d4ed8;
 }
+
+/* -----------------------------------------------
+   CONFIGURAÇÕES
+----------------------------------------------- */
+.config-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.info-sistema {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 13px;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    color: #64748b;
+    font-weight: 500;
+}
+
+.info-valor {
+    color: #0f172a;
+    font-weight: 600;
+}

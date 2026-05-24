@@ -36,6 +36,14 @@ $pagina_atual = basename($_SERVER['PHP_SELF']);
     </nav>
 
     <div class="sidebar-footer">
+        <a href="/sistema_medico/pages/lembretes.php"
+           class="nav-item <?= $pagina_atual === 'lembretes.php' ? 'ativo' : '' ?>">
+            <span class="nav-icon">🔔</span> Lembretes
+        </a>
+        <a href="/sistema_medico/pages/configuracoes.php"
+           class="nav-item <?= $pagina_atual === 'configuracoes.php' ? 'ativo' : '' ?>">
+            <span class="nav-icon">⚙️</span> Configurações
+        </a>
         <a href="/sistema_medico/auth/logout.php" class="nav-item sair">
             <span class="nav-icon">🚪</span> Sair
         </a>
