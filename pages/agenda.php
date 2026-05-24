@@ -101,6 +101,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'excluir
 }
 
 // -----------------------------------------------
+// AÇÃO: ATUALIZAR TURNO
+// -----------------------------------------------
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'atualizar') {
+    if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
+        $erro = 'Requisição inválida.';
+    } else {
+        $id_agenda   = (int)($_POST['id_agenda']   ?? 0);
+        $id_local    = (int)($_POST['id_local']    ?? 0);
+        $turno       = $_POST['turno']             ?? '';
+        $hora_inicio = $_POST['hora_inicio']       ?? '';
+        $hora_fim    = $_POST['hora_fim']           ?? '';
+        $status      = $_POST['status_agenda']     ?? 'agendado';
+        $obs         = trim($_POST['observacao']   ?? '');
+
+        if (empty($id_local) || empty($turno) || empty($hora_inicio) || empty($hora_fim)) {
+            $erro = 'Preencha todos os campos obrigatórios.';
+        } else {
+            $data_fim = null;
+            if ($hora_fim <= $hora_inicio) {
+                if (in_array($turno, ['noite','tarde/noite','manha/tarde/noite'])) {
+                    $stmt = $pdo->prepare("
+                        SELECT data_trabalho FROM agenda_trabalho WHERE id_agenda = ?
+                    ");
+                    $stmt->execute([$id_agenda]);
+                    $ag = $stmt->fetch();
+                    $data_fim = date('Y-m-d', strtotime($ag['data_trabalho'] . ' +1 day'));
+                } else {
+                    $erro = 'Horário de fim deve ser maior que início para este turno.';
+                }
+            }
+
+            if (empty($erro)) {
+                $stmt = $pdo->prepare("
+                    SELECT id_agenda FROM agenda_trabalho
+                    WHERE id_agenda = ? AND id_usuario = ?
+                ");
+                $stmt->execute([$id_agenda, $id_usuario]);
+
+                if ($stmt->fetch()) {
+                    $pdo->prepare("
+                        UPDATE agenda_trabalho SET
+                            id_local      = ?,
+                            turno         = ?,
+                            hora_inicio   = ?,
+                            hora_fim      = ?,
+                            data_fim      = ?,
+                            status_agenda = ?,
+                            observacao    = ?
+                        WHERE id_agenda = ?
+                    ")->execute([
+                        $id_local, $turno, $hora_inicio,
+                        $hora_fim, $data_fim, $status,
+                        $obs ?: null, $id_agenda
+                    ]);
+                    $sucesso = 'Turno atualizado com sucesso!';
+                }
+            }
+        }
+    }
+}
+
+// pré-carrega turno para edição
+$turno_editar = null;
+if (!empty($_GET['editar'])) {
+    $stmt = $pdo->prepare("
+        SELECT a.*, l.nome AS local_nome
+        FROM agenda_trabalho a
+        JOIN locais_trabalho l ON l.id_local = a.id_local
+        WHERE a.id_agenda = ? AND a.id_usuario = ?
+    ");
+    $stmt->execute([(int)$_GET['editar'], $id_usuario]);
+    $turno_editar = $stmt->fetch();
+}
+
+// -----------------------------------------------
 // BUSCA: TURNOS DO MÊS
 // -----------------------------------------------
 $stmt = $pdo->prepare("
@@ -251,33 +326,45 @@ $titulo_pagina = 'Agenda Mensal';
             <div class="agenda-direita">
 
                 <!-- FORMULÁRIO -->
-                <div class="card">
+                <div class="card" <?= $turno_editar ? 'style="border: 2px solid #3b82f6;"' : '' ?>>
                     <div class="card-header">
-                        <h3>➕ Cadastrar turno</h3>
+                        <h3><?= $turno_editar ? '✏️ Editar turno' : '➕ Cadastrar turno' ?></h3>
+                        <?php if ($turno_editar): ?>
+                            <a href="agenda.php?mes=<?= $mes ?>&ano=<?= $ano ?>"
+                               class="btn-secondary">✕ Cancelar</a>
+                        <?php endif; ?>
                     </div>
                     <div class="card-body">
                         <form method="POST" action="" class="form-agenda">
-                    
-                            <input type="hidden" name="csrf_token" 
-                                value="<?= gerar_csrf_token() ?>">
 
-                            <input type="hidden" name="acao" value="cadastrar">
+                            <input type="hidden" name="csrf_token"
+                                   value="<?= gerar_csrf_token() ?>">
+
+                            <?php if ($turno_editar): ?>
+                                <input type="hidden" name="acao" value="atualizar">
+                                <input type="hidden" name="id_agenda"
+                                       value="<?= $turno_editar['id_agenda'] ?>">
+                            <?php else: ?>
+                                <input type="hidden" name="acao" value="cadastrar">
+                            <?php endif; ?>
 
                             <div class="campo">
                                 <label>Data *</label>
                                 <input type="date" name="data_trabalho"
                                        id="campo_data"
-                                       min="<?= $ano ?>-01-01"
-                                       value="<?= date('Y-m-d') ?>"
+                                       value="<?= $turno_editar ? $turno_editar['data_trabalho'] : date('Y-m-d') ?>"
+                                       <?= $turno_editar ? 'readonly' : "min=\"{$ano}-01-01\"" ?>
                                        required>
                             </div>
 
                             <div class="campo">
                                 <label>Local *</label>
                                 <select name="id_local" required>
-                                    <option value="">Selecione...</option>
+                                 <option value="">Selecione...</option>
                                     <?php foreach ($locais as $l): ?>
-                                        <option value="<?= $l['id_local'] ?>">
+                                        <option value="<?= $l['id_local'] ?>"
+                                            <?= ($turno_editar && $turno_editar['id_local'] == $l['id_local'])
+                                                ? 'selected' : '' ?>>
                                             <?= htmlspecialchars($l['nome']) ?>
                                         </option>
                                     <?php endforeach; ?>
@@ -288,46 +375,76 @@ $titulo_pagina = 'Agenda Mensal';
                                 <label>Turno *</label>
                                 <select name="turno" required>
                                     <option value="">Selecione...</option>
-                                    <option value="manha">Manhã</option>
-                                    <option value="tarde">Tarde</option>
-                                    <option value="noite">Noite</option>
-                                    <option value="manha/tarde">Manhã e Tarde</option>
-                                    <option value="tarde/noite">Tarde e Noite</option>
-                                    <option value="manha/tarde/noite">Dia inteiro</option>
+                                    <?php
+                                    $turnos_opt = [
+                                        'manha'             => 'Manhã',
+                                        'tarde'             => 'Tarde',
+                                        'noite'             => 'Noite',
+                                        'manha/tarde'       => 'Manhã e Tarde',
+                                        'tarde/noite'       => 'Tarde e Noite',
+                                        'manha/tarde/noite' => 'Dia inteiro',
+                                    ];
+                                    foreach ($turnos_opt as $val => $label):
+                                    ?>
+                                     <option value="<?= $val ?>"
+                                         <?= ($turno_editar && $turno_editar['turno'] === $val)
+                                                ? 'selected' : '' ?>>
+                                            <?= $label ?>
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
 
                             <div class="campo">
                                 <label>Status</label>
                                 <select name="status_agenda">
-                                    <option value="agendado">Agendado</option>
-                                    <option value="concluido">Concluído</option>
-                                    <option value="cancelado">Cancelado</option>
-                                    <option value="folga">Folga</option>
+                                    <?php
+                                    $status_opt = [
+                                        'agendado'  => 'Agendado',
+                                        'concluido' => 'Concluído',
+                                        'cancelado' => 'Cancelado',
+                                        'folga'     => 'Folga',
+                                    ];
+                                    foreach ($status_opt as $val => $label):
+                                    ?>
+                                        <option value="<?= $val ?>"
+                                            <?= ($turno_editar && $turno_editar['status_agenda'] === $val)
+                                                ? 'selected' : '' ?>>
+                                            <?= $label ?>
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
 
                             <div class="campo">
                                 <label>Hora início *</label>
-                                <input type="time" name="hora_inicio" required>
+                                <input type="time" name="hora_inicio" required
+                                    value="<?= $turno_editar
+                                           ? date('H:i', strtotime($turno_editar['hora_inicio']))
+                                           : '' ?>">
                             </div>
 
                             <div class="campo">
                                 <label>Hora fim *</label>
-                                <input type="time" name="hora_fim" required>
+                                <input type="time" name="hora_fim" required
+                                    value="<?= $turno_editar
+                                           ? date('H:i', strtotime($turno_editar['hora_fim']))
+                                           : '' ?>">
                             </div>
 
                             <div class="campo campo-full">
                                 <label>Observação</label>
                                 <input type="text" name="observacao"
-                                       placeholder="Ex: Sala 3, levar jaleco, 3 retornos">
+                                       placeholder="Ex: Sala 3, levar jaleco, 3 retornos"
+                                       value="<?= htmlspecialchars($turno_editar['observacao'] ?? '') ?>">
                             </div>
 
                             <div class="campo campo-full">
                                 <button type="submit" class="btn-primary btn-block">
-                                    + Cadastrar turno
+                                    <?= $turno_editar ? '💾 Salvar alterações' : '+ Cadastrar turno' ?>
                                 </button>
                             </div>
+
                         </form>
                     </div>
                 </div>
@@ -371,6 +488,11 @@ $titulo_pagina = 'Agenda Mensal';
                                         <span class="badge badge-<?= $t['status_agenda'] ?>">
                                             <?= ucfirst($t['status_agenda']) ?>
                                         </span>
+
+                                        <a href="?editar=<?= $t['id_agenda'] ?>&mes=<?= $mes ?>&ano=<?= $ano ?>"
+                                           class="btn-mini btn-info">
+                                            ✏️ Editar
+                                        </a>
 
                                         <form method="POST"
                                               onsubmit="return confirm('Remover este turno?')">
