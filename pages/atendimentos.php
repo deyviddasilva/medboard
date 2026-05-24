@@ -64,6 +64,25 @@ if (!empty($filtro_turno)) {
 $where_sql = implode(' AND ', $where);
 
 // -----------------------------------------------
+// PAGINAÇÃO
+// -----------------------------------------------
+$por_pagina   = 10;
+$pagina_atual = max(1, (int)($_GET['pagina'] ?? 1));
+$offset       = ($pagina_atual - 1) * $por_pagina;
+
+// total de registros
+$stmt_total = $pdo->prepare("
+    SELECT COUNT(r.id_registro) AS total
+    FROM registro_diario r
+    JOIN agenda_trabalho a ON a.id_agenda = r.id_agenda
+    JOIN locais_trabalho  l ON l.id_local  = a.id_local
+    WHERE {$where_sql}
+");
+$stmt_total->execute($params);
+$total_registros = (int)$stmt_total->fetch()['total'];
+$total_paginas   = (int)ceil($total_registros / $por_pagina);
+
+// -----------------------------------------------
 // QUERY: ATENDIMENTOS COM FILTROS
 // -----------------------------------------------
 $stmt = $pdo->prepare("
@@ -93,6 +112,7 @@ $stmt = $pdo->prepare("
     JOIN locais_trabalho  l ON l.id_local  = a.id_local
     WHERE {$where_sql}
     ORDER BY a.data_trabalho DESC, a.hora_inicio DESC
+    LIMIT {$por_pagina} OFFSET {$offset}
 ");
 $stmt->execute($params);
 $atendimentos = $stmt->fetchAll();
@@ -276,7 +296,7 @@ $titulo_pagina = 'Atendimentos';
             <div class="card-header">
                 <h3>📋 Atendimentos — <?= $meses_pt[$filtro_mes] ?> <?= $filtro_ano ?></h3>
                 <span class="badge badge-agendado">
-                    <?= count($atendimentos) ?> registro(s)
+                    <?= $total_registros ?> registro(s)
                 </span>
             </div>
             <div class="card-body">
@@ -396,6 +416,25 @@ $titulo_pagina = 'Atendimentos';
                             Tente outro mês ou
                             <a href="registro_dia.php">lance um registro →</a>
                         </small>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($total_paginas > 1): ?>
+                    <div class="paginacao">
+                        <?php if ($pagina_atual > 1): ?>
+                            <a href="?mes=<?= $filtro_mes ?>&ano=<?= $filtro_ano ?>&local=<?= $filtro_local ?>&turno=<?= $filtro_turno ?>&pagina=<?= $pagina_atual - 1 ?>"
+                               class="btn-pagina">‹ Anterior</a>
+                        <?php endif; ?>
+
+                        <span class="pagina-info">
+                            Página <?= $pagina_atual ?> de <?= $total_paginas ?>
+                            (<?= $total_registros ?> registros)
+                        </span>
+
+                        <?php if ($pagina_atual < $total_paginas): ?>
+                            <a href="?mes=<?= $filtro_mes ?>&ano=<?= $filtro_ano ?>&local=<?= $filtro_local ?>&turno=<?= $filtro_turno ?>&pagina=<?= $pagina_atual + 1 ?>"
+                               class="btn-pagina">Próxima ›</a>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
 
