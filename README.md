@@ -8,13 +8,64 @@ registro de atendimentos e relatórios de produtividade.
 
 ## 📋 Funcionalidades
 
-- 🔐 **Autenticação** — login seguro com senha criptografada (bcrypt)
-- 🏠 **Dashboard** — visão geral do dia, semana e próximos plantões
-- 📅 **Agenda mensal** — calendário com turnos por local e horário
-- 📍 **Locais de trabalho** — cadastro com cor de identificação
-- 📝 **Registro do dia** — lançamento de pacientes, faltas, encaixes e tempo médio
-- 👥 **Atendimentos** — histórico completo com filtros por local e turno
-- 📊 **Relatórios** — gráficos de evolução, produtividade e taxa de faltas
+### 🔐 Autenticação e Segurança
+- Login seguro com senha criptografada (bcrypt)
+- Proteção CSRF em todos os formulários
+- Rate limiting — bloqueio após 5 tentativas erradas
+- Timeout de sessão por inatividade (2 horas)
+- Mostrar/ocultar senha no login
+
+### 🏠 Dashboard
+- Visão geral do dia e semana
+- KPIs em tempo real (atendidos, faltas, encaixes)
+- Aviso de turnos sem registro lançado
+- Lembretes do dia em destaque
+- Gráfico de atendimentos da semana
+- Próximos plantões com dia da semana
+
+### 📅 Agenda Mensal
+- Calendário visual com turnos por cor de local
+- Cadastro, edição e exclusão de turnos
+- Suporte a turnos noturnos que viram o dia
+- Navegação entre meses
+- Legenda de locais
+
+### 📍 Locais de Trabalho
+- Cadastro com cor de identificação
+- Edição e exclusão de locais
+- Ativar/desativar locais
+- Exibição no calendário e agenda
+
+### 📝 Registro do Dia
+- Lançamento de pacientes atendidos, faltas, cancelamentos e encaixes
+- Tempo médio por consulta
+- Horário real de início e fim
+- Edição de registros já lançados
+- Situação do dia (realizado, parcialmente, não realizado, substituído)
+
+### 👥 Atendimentos
+- Histórico completo com filtros por local e turno
+- Navegação entre meses
+- KPIs do período filtrado
+- Paginação (10 registros por página)
+
+### 📊 Relatórios
+- Gráfico de atendimentos por dia do mês
+- Comparativo por local de trabalho
+- Atendimentos por dia da semana
+- Evolução dos últimos 6 meses
+- Taxa de faltas e médias
+
+### 🔔 Lembretes
+- Cadastro com título, data, hora e descrição
+- Destaque visual para lembretes de hoje e atrasados
+- Marcar como concluído
+- Histórico de concluídos recentes
+
+### ⚙️ Configurações
+- Edição de nome e e-mail
+- Alteração de senha com validação
+- Informações do sistema
 
 ---
 
@@ -40,7 +91,8 @@ sistema_medico/
 ├── includes/
 │   ├── header.php
 │   ├── sidebar.php
-│   └── footer.php
+│   ├── footer.php
+│   └── auth_check.php        ← verificação de sessão e timeout
 │
 ├── assets/
 │   ├── css/style.css
@@ -52,16 +104,18 @@ sistema_medico/
 │   ├── registro_dia.php
 │   ├── atendimentos.php
 │   ├── locais.php
-│   └── relatorios.php
+│   ├── relatorios.php
+│   ├── lembretes.php
+│   └── configuracoes.php
 │
 ├── auth/
 │   ├── login.php
 │   └── logout.php
 │
 ├── database/
-│   └── schema.sql
+│   └── schema.sql            ← estrutura completa do banco
 │
-├── index.php
+├── index.php                 ← Home / Dashboard
 ├── .gitignore
 └── README.md
 
@@ -110,7 +164,7 @@ INSERT INTO usuarios (nome, email, senha, idioma) VALUES
  '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
  'pt-BR');
 ```
-> Senha padrão: `password` — troque após o primeiro acesso.
+> Senha padrão: `password` — troque após o primeiro acesso em Configurações.
 
 **5. Acesse no navegador**
 http://localhost/medboard/auth/login.php
@@ -122,27 +176,46 @@ http://localhost/medboard/auth/login.php
 - Senhas armazenadas com `password_hash()` bcrypt
 - Queries com PDO e prepared statements
 - Proteção contra XSS com `htmlspecialchars()`
-- Sessões PHP para controle de autenticação
+- Proteção CSRF em todos os formulários POST
+- Rate limiting no login (bloqueio após 5 tentativas)
+- Timeout de sessão por inatividade (2 horas)
 - Arquivo de configuração fora do versionamento
 
 ---
 
-## 🗺 Roadmap — V2
+## 🗺 Roadmap
 
-- [ ] Página de configurações (editar nome, email e senha)
-- [ ] Cadastro e gestão de lembretes
-- [ ] Exportação de relatórios em PDF
-- [ ] Layout responsivo para dispositivos móveis
+### ✅ V1 — Base do sistema
+- [x] Banco de dados modelado
+- [x] Login seguro
+- [x] Dashboard com dados reais
+- [x] Agenda mensal com calendário
+- [x] Registro de atendimentos
+- [x] Histórico com filtros
+- [x] Relatórios com gráficos
+
+### ✅ V2 — Segurança e funcionalidades
+- [x] Proteção CSRF
+- [x] Rate limiting e timeout de sessão
+- [x] Edição de agenda, registros e locais
+- [x] Página de configurações
+- [x] Lembretes
+- [x] Paginação
+
+### 🔜 V3 — Design e experiência
+- [ ] Layout responsivo para celular
+- [ ] Design profissional e animações
 - [ ] Modo escuro
-- [ ] Edição de turnos na agenda
+- [ ] Gráficos interativos com Chart.js
+- [ ] Exportar relatórios em PDF
 - [ ] Recuperação de senha por e-mail
 
 ---
 
 ## 👨‍💻 Autor
 
-Desenvolvido por **[Deyvid GABRIEL]**
-para uso pessoal da **Dra.**
+Desenvolvido por **[ Deyvid Gabriel ]**
+para uso pessoal da **Dra. Melody**
 
 ---
 
