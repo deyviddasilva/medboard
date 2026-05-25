@@ -1275,33 +1275,82 @@ a:hover {
 }
 
 /* -----------------------------------------------
+   GRÁFICO DE BARRAS
+----------------------------------------------- */
+.grafico-barras {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    height: 140px;
+    padding: 0 8px;
+    gap: 6px;
+}
+
+.barra-grupo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+    gap: 4px;
+}
+
+.barra-valor {
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    color: var(--color-text-muted);
+    min-height: 16px;
+}
+
+.barra {
+    width: 100%;
+    background: var(--color-primary-light);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    min-height: 4px;
+    transition: height 0.4s ease, background var(--transition);
+}
+
+.barra:hover {
+    background: var(--color-primary);
+    opacity: 0.85;
+}
+
+.barra-hoje,
+.barra[data-hoje="true"] {
+    background: var(--color-primary) !important;
+    box-shadow: 0 -2px 8px rgba(42, 157, 143, 0.3);
+}
+
+.barra-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    font-weight: 500;
+}
+
+/* -----------------------------------------------
    RELATÓRIOS
 ----------------------------------------------- */
 .grafico-mensal {
     height: 180px;
     overflow-x: auto;
-    gap: 4px;
+    gap: 3px;
 }
 
 .grafico-mensal .barra-grupo {
-    min-width: 24px;
+    min-width: 22px;
 }
 
 .grafico-mensal .barra-label {
     font-size: 10px;
 }
 
-.barra-hoje {
-    background: #3b82f6 !important;
-}
-
-/* barra de progresso horizontal */
 .local-rel-item {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    padding: 10px 0;
-    border-bottom: 1px solid #f1f5f9;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--color-border-light);
 }
 
 .local-rel-item:last-child {
@@ -1312,26 +1361,28 @@ a:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 13px;
-    color: #0f172a;
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+    font-weight: 600;
 }
 
 .local-rel-sub {
-    font-size: 11px;
-    color: #94a3b8;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
 }
 
 .barra-progresso {
     height: 8px;
-    background: #f1f5f9;
-    border-radius: 999px;
+    background: var(--color-bg);
+    border-radius: var(--radius-xl);
     overflow: hidden;
+    border: 1px solid var(--color-border);
 }
 
 .barra-progresso-fill {
     height: 100%;
-    border-radius: 999px;
-    transition: width 0.4s ease;
+    border-radius: var(--radius-xl);
+    transition: width 0.5s ease;
     min-width: 4px;
 }
 /* -----------------------------------------------
@@ -1486,7 +1537,7 @@ a:hover {
     border-radius: var(--radius-sm);
     border: 1px solid var(--color-border);
 }
- 
+
 /* -----------------------------------------------
    ALERTAS EXTRAS
 ----------------------------------------------- */
