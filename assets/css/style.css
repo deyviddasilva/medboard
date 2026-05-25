@@ -895,37 +895,41 @@ a:hover {
 .mes-nav {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
 }
 
-.mes-nav h3 {
-    font-size: 15px;
+.mes-nav h3,
+.mes-nav strong {
+    font-size: var(--font-size-md);
     font-weight: 700;
-    color: #0f172a;
+    color: var(--color-text);
     text-transform: capitalize;
     min-width: 160px;
     text-align: center;
+    letter-spacing: -0.2px;
 }
 
 .btn-mes {
-    background: #f1f5f9;
-    border: none;
-    border-radius: 6px;
-    width: 30px;
-    height: 30px;
+    background: var(--color-bg);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
-    color: #475569;
+    font-size: 16px;
+    color: var(--color-text-muted);
     cursor: pointer;
     text-decoration: none;
     font-weight: 700;
-    transition: background 0.2s;
+    transition: all var(--transition);
 }
 
 .btn-mes:hover {
-    background: #e2e8f0;
+    background: var(--color-primary-light);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
 }
 
 /* -----------------------------------------------
@@ -934,34 +938,35 @@ a:hover {
 .calendario {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
+    gap: 3px;
     margin-bottom: 16px;
 }
 
 .cal-cabecalho {
     text-align: center;
-    font-size: 11px;
+    font-size: var(--font-size-xs);
     font-weight: 700;
-    color: #94a3b8;
-    padding: 4px 0;
+    color: var(--color-text-muted);
+    padding: 6px 0;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .cal-dia {
     min-height: 48px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     padding: 4px;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
-    transition: background 0.15s;
-    background: #f8fafc;
+    gap: 3px;
+    transition: all var(--transition);
+    background: transparent;
 }
 
 .cal-dia:hover {
-    background: #e0f2fe;
+    background: var(--color-primary-light);
 }
 
 .cal-dia.vazio {
@@ -970,27 +975,29 @@ a:hover {
 }
 
 .cal-dia.hoje .cal-numero {
-    background: #3b82f6;
+    background: var(--color-primary);
     color: #fff;
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(42, 157, 143, 0.4);
 }
 
 .cal-dia.tem-turno {
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
 }
 
 .cal-numero {
-    font-size: 13px;
+    font-size: var(--font-size-sm);
     font-weight: 600;
-    color: #1e293b;
-    width: 24px;
-    height: 24px;
+    color: var(--color-text);
+    width: 26px;
+    height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1017,16 +1024,17 @@ a:hover {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    padding-top: 12px;
-    border-top: 1px solid #f1f5f9;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-border-light);
 }
 
 .legenda-item {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
-    color: #475569;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    font-weight: 500;
 }
 
 .legenda-cor {
@@ -1034,6 +1042,7 @@ a:hover {
     height: 10px;
     border-radius: 50%;
     display: inline-block;
+    flex-shrink: 0;
 }
 
 /* -----------------------------------------------
@@ -1045,20 +1054,26 @@ a:hover {
     gap: 14px;
 }
 
-.form-agenda select {
+.form-agenda select,
+.form-agenda input[type="date"],
+.form-agenda input[type="time"],
+.form-agenda input[type="text"] {
     width: 100%;
     padding: 10px 14px;
-    border: 1.5px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 14px;
-    color: #1e293b;
-    background: #fff;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    font-family: var(--font-family);
+    color: var(--color-text);
+    background: var(--color-surface);
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color var(--transition), box-shadow var(--transition);
 }
 
-.form-agenda select:focus {
-    border-color: #3b82f6;
+.form-agenda select:focus,
+.form-agenda input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.12);
 }
 /* -----------------------------------------------
    TURNO QUE VIRA O DIA
