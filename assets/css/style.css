@@ -1151,19 +1151,20 @@ a:hover {
 .form-registro textarea {
     width: 100%;
     padding: 10px 14px;
-    border: 1.5px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 14px;
-    color: #1e293b;
-    background: #fff;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+    background: var(--color-surface);
+    font-family: var(--font-family);
     outline: none;
-    transition: border-color 0.2s;
-    font-family: inherit;
+    transition: border-color var(--transition), box-shadow var(--transition);
 }
 
 .form-registro select:focus,
 .form-registro textarea:focus {
-    border-color: #3b82f6;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.12);
 }
 
 .form-registro textarea {
@@ -1173,31 +1174,40 @@ a:hover {
 .input-numero {
     width: 100%;
     padding: 10px 14px;
-    border: 1.5px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 20px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 22px;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--color-text);
     text-align: center;
+    font-family: var(--font-family);
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    background: var(--color-surface);
 }
 
 .input-numero:focus {
-    border-color: #3b82f6;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.12);
 }
 
 /* -----------------------------------------------
    ITENS DE REGISTRO
 ----------------------------------------------- */
 .registro-item {
-    background: #f8fafc;
-    border-radius: 10px;
+    background: var(--color-bg);
+    border-radius: var(--radius-md);
     padding: 14px 16px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-border);
     display: flex;
     flex-direction: column;
     gap: 10px;
+    transition: all var(--transition);
+}
+
+.registro-item:hover {
+    box-shadow: var(--shadow-sm);
+    border-color: var(--color-primary);
 }
 
 .registro-topo {
@@ -1208,20 +1218,24 @@ a:hover {
 }
 
 .registro-topo strong {
-    font-size: 14px;
-    color: #0f172a;
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+    font-weight: 600;
     display: block;
 }
 
 .registro-local {
-    font-size: 12px;
-    color: #64748b;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
 }
 
 .registro-numeros {
     display: flex;
     gap: 16px;
     flex-wrap: wrap;
+    padding: 10px 0;
+    border-top: 1px solid var(--color-border-light);
+    border-bottom: 1px solid var(--color-border-light);
 }
 
 .num-item {
@@ -1232,29 +1246,34 @@ a:hover {
 }
 
 .num-valor {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--color-text);
+    letter-spacing: -0.5px;
 }
 
 .num-label {
-    font-size: 11px;
-    color: #94a3b8;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
     text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
 .registro-obs {
-    font-size: 12px;
-    color: #f59e0b;
-    background: #fffbeb;
+    font-size: var(--font-size-xs);
+    color: var(--color-warning);
+    background: var(--color-warning-light);
     padding: 6px 10px;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
+    font-weight: 500;
 }
 
 .registro-acoes {
     display: flex;
     justify-content: flex-end;
+    gap: 8px;
 }
+
 /* -----------------------------------------------
    RELATÓRIOS
 ----------------------------------------------- */
