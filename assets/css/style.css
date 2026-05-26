@@ -1,4 +1,9 @@
 /* -----------------------------------------------
+   TIPOGRAFIA — IMPORTA INTER DO GOOGLE FONTS
+----------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* -----------------------------------------------
    VARIÁVEIS CSS — DESIGN SYSTEM MEDBOARD
 ----------------------------------------------- */
 :root {
@@ -93,11 +98,6 @@ a {
 a:hover {
     color: var(--color-primary-hover);
 }
-
-/* -----------------------------------------------
-   TIPOGRAFIA — IMPORTA INTER DO GOOGLE FONTS
------------------------------------------------ */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* -----------------------------------------------
    LOGIN
@@ -1051,19 +1051,7 @@ a:hover {
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.12);
 }
-/* -----------------------------------------------
-   TURNO QUE VIRA O DIA
------------------------------------------------ */
-.badge-virada {
-    display: inline-block;
-    background: #fef3c7;
-    color: #92400e;
-    font-size: 10px;
-    font-weight: 600;
-    padding: 1px 6px;
-    border-radius: 999px;
-    margin-left: 4px;
-}
+
 /* -----------------------------------------------
    REGISTRO LAYOUT
 ----------------------------------------------- */
@@ -1642,26 +1630,6 @@ a:hover {
 .lembrete-acoes {
     display: flex;
     gap: 6px;
-}
-
-/* -----------------------------------------------
-   TEXTAREA NO FORM-GRID
------------------------------------------------ */
-.form-grid textarea {
-    width: 100%;
-    padding: 10px 14px;
-    border: 1.5px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 14px;
-    color: #1e293b;
-    font-family: inherit;
-    resize: vertical;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-.form-grid textarea:focus {
-    border-color: #3b82f6;
 }
 
 /* -----------------------------------------------
