@@ -3,7 +3,7 @@
 *.log
 
 # Configuração local sensível
-config/database.php
+# config/database.php
 
 # Arquivos do sistema operacional
 .DS_Store
