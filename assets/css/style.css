@@ -1316,6 +1316,40 @@ a:hover {
     transition: width 0.5s ease;
     min-width: 4px;
 }
+.relatorios-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.relatorios-periodo {
+    flex: 1;
+    text-align: center;
+    font-size: var(--font-size-lg);
+    color: var(--color-text);
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin: 0;
+}
+
+.chart-box {
+    position: relative;
+    width: 100%;
+}
+
+.chart-box-sm {
+    height: 260px;
+}
+
+.chart-box-md {
+    height: 320px;
+}
+
+.chart-box-lg {
+    height: 380px;
+}
 /* -----------------------------------------------
    FILTROS
 ----------------------------------------------- */
@@ -1729,11 +1763,26 @@ a:hover {
    =============================================== */
 @media (max-width: 768px) {
 
-   /* Layout principal em coluna no mobile */
-    .layout {
-        display: block;          /* ou, manter flex: flex-direction: column; */
+    .relatorios-nav {
+        justify-content: center;
     }
 
+    .relatorios-periodo {
+        order: -1;
+        width: 100%;
+    }
+
+    .chart-box-sm {
+        height: 240px;
+    }
+
+    .chart-box-md {
+        height: 280px;
+    }
+
+    .chart-box-lg {
+        height: 300px;
+    }
     /* -----------------------------------------------
        OCULTA SIDEBAR DESKTOP
     ----------------------------------------------- */
