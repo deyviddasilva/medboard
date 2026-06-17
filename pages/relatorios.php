@@ -173,9 +173,16 @@ $titulo_pagina = 'Relatórios';
         
         <div class="card">
             <div class="card-body relatorios-nav">
-                <a href="?mes=<?= $mes-1 ?>&ano=<?= $ano ?>" class="btn-secondary">‹ Mês anterior</a>
+                <a href="?mes=<?= $mes-1 ?>&ano=<?= $ano ?>"
+                    class="btn-secondary">‹ Mês anterior</a>
                 <h2 class="relatorios-periodo">📊 <?= $meses_pt[$mes] ?> <?= $ano ?></h2>
-                <a href="?mes=<?= $mes+1 ?>&ano=<?= $ano ?>" class="btn-secondary">Próximo mês ›</a>
+                <a href="?mes=<?= $mes+1 ?>&ano=<?= $ano ?>"
+                    class="btn-secondary">Próximo mês ›</a>
+                <a href="relatorio_pdf.php?mes=<?= $mes ?>&ano=<?= $ano ?>"
+                    target="_blank"
+                    class="btn-primary">
+                      🖨️ Exportar PDF
+                </a>
             </div>
         </div>
 
