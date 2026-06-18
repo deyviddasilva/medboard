@@ -209,11 +209,21 @@ $situacoes = [
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <script>
+        if (localStorage.getItem('medboard-tema') === 'dark') {
+            document.documentElement.classList.add('dark-preload');
+        }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro do Dia — MedBoard</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body class="layout">
+<script>
+if (localStorage.getItem('medboard-tema') === 'dark') {
+    document.body.classList.add('dark');
+}
+</script>
 
 <?php include '../includes/sidebar.php'; ?>
 

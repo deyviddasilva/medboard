@@ -58,11 +58,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <script>
+        if (localStorage.getItem('medboard-tema') === 'dark') {
+            document.documentElement.classList.add('dark-preload');
+        }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — MedBoard</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body class="login-body">
+<script>
+if (localStorage.getItem('medboard-tema') === 'dark') {
+    document.body.classList.add('dark');
+}
+</script>
 
     <div class="login-container">
 

@@ -113,6 +113,11 @@ $dias_semana_pt = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <script>
+        if (localStorage.getItem('medboard-tema') === 'dark') {
+            document.documentElement.classList.add('dark-preload');
+        }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Relatório <?= $meses_pt[$mes] ?> <?= $ano ?> — MedBoard</title>
     <style>
