@@ -126,6 +126,10 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <button type="submit" class="btn-primary btn-block">Entrar</button>
         </form>
 
+        <p style="text-align:center; margin-top: 16px; font-size: 13px;">
+            <a href="esqueci_senha.php">Esqueci minha senha</a>
+        </p>
+
     </div>
     <script>
         function toggleSenha() {

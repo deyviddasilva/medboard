@@ -36,3 +36,11 @@ function conectar(): PDO {
 
     return $pdo;
 }
+// -----------------------------------------------
+// CONFIGURAÇÕES DE E-MAIL (GMAIL SMTP)
+// -----------------------------------------------
+define('SMTP_HOST', 'smtp.gmail.com');
+define('SMTP_USER', 'seu-email@gmail.com');
+define('SMTP_PASS', 'sua-senha-de-app-do-google');
+define('SMTP_PORT', 587);
+define('SMTP_FROM_NAME', 'MedBoard');

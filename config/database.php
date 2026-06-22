@@ -102,3 +102,11 @@ function tentativas_restantes(string $email): int {
     $chave = 'login_tentativas_' . md5($email);
     return max(0, 5 - ($_SESSION[$chave] ?? 0));
 }
+// -----------------------------------------------
+// CONFIGURAÇÕES DE E-MAIL (GMAIL SMTP)
+// -----------------------------------------------
+define('SMTP_HOST', 'smtp.gmail.com');
+define('SMTP_USER', 'gdeyvid16@gmail.com');      // ← troque pelo seu e-mail
+define('SMTP_PASS', 'jrsu semg nmzo mqsp');     // ← troque pela senha de app (16 caracteres)
+define('SMTP_PORT', 587);
+define('SMTP_FROM_NAME', 'MedBoard');
