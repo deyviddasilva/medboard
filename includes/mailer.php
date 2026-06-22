@@ -30,7 +30,7 @@ function enviar_email_recuperacao(string $email_destino, string $nome, string $l
                 <h2 style='color: #2A9D8F;'>🩺 MedBoard</h2>
                 <p>Olá, <strong>{$nome}</strong>!</p>
                 <p>Recebemos uma solicitação para redefinir sua senha.</p>
-                <p>Clique no botão abaixo para criar uma nova senha. Este link expira em <strong>1 hora</strong>.</p>
+                <p>Clique no botão abaixo para criar uma nova senha. Este link expira em <strong>10 minutos</strong>.</p>
                 <p style='margin: 24px 0;'>
                     <a href='{$link}' 
                        style='background: #2A9D8F; color: #fff; padding: 12px 24px; 

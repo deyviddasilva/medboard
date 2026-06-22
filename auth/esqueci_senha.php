@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // mesmo se o e-mail não existir no banco
             if ($usuario) {
                 $token   = bin2hex(random_bytes(32));
-                $expira  = date('Y-m-d H:i:s', strtotime('+1 hour'));
+                $expira  = date('Y-m-d H:i:s', strtotime('+10 minutes'));
 
                 $pdo->prepare("
                     UPDATE usuarios 
