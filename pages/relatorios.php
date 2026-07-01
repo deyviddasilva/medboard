@@ -2,6 +2,7 @@
 session_start();
 require_once '../config/database.php';
 require_once '../includes/auth_check.php';
+require_once '../includes/i18n.php';
 
 verificar_sessao();
 
@@ -14,11 +15,11 @@ $ano = (int)($_GET['ano'] ?? date('Y'));
 if ($mes < 1)  { $mes = 12; $ano--; }
 if ($mes > 12) { $mes = 1;  $ano++; }
 
-$meses_pt = [
-    1  => 'Janeiro',   2  => 'Fevereiro', 3  => 'Março',
-    4  => 'Abril',     5  => 'Maio',      6  => 'Junho',
-    7  => 'Julho',     8  => 'Agosto',    9  => 'Setembro',
-    10 => 'Outubro',   11 => 'Novembro',  12 => 'Dezembro'
+$meses_chave = [
+    1 => 'mes_janeiro',   2 => 'mes_fevereiro', 3 => 'mes_marco',
+    4 => 'mes_abril',     5 => 'mes_maio',      6 => 'mes_junho',
+    7 => 'mes_julho',     8 => 'mes_agosto',    9 => 'mes_setembro',
+    10 => 'mes_outubro',  11 => 'mes_novembro', 12 => 'mes_dezembro'
 ];
 
 $inicio_mes = sprintf('%04d-%02d-01', $ano, $mes);
@@ -86,10 +87,11 @@ $stmt = $pdo->prepare("
 $stmt->execute([$id_usuario, $inicio_mes, $fim_mes]);
 $por_dia_semana_raw = $stmt->fetchAll();
 
-$dias_semana_label = [1=>'Dom',2=>'Seg',3=>'Ter',4=>'Qua',5=>'Qui',6=>'Sex',7=>'Sáb'];
+$dias_semana_chave = ['dia_dom','dia_seg','dia_ter','dia_qua','dia_qui','dia_sex','dia_sab'];
 $por_dia_semana = [];
-foreach ($dias_semana_label as $num => $label) {
-    $por_dia_semana[$num] = ['label' => $label, 'total' => 0, 'turnos' => 0];
+foreach ($dias_semana_chave as $idx => $chave) {
+    $num = $idx + 1; // 1=Dom ... 7=Sáb
+    $por_dia_semana[$num] = ['label' => __($chave), 'total' => 0, 'turnos' => 0];
 }
 foreach ($por_dia_semana_raw as $d) {
     $por_dia_semana[$d['dia_semana']]['total'] = (int)$d['total'];
@@ -147,11 +149,12 @@ foreach ($por_local as $loc) {
 $labels_evolucao = [];
 $dados_evolucao = [];
 foreach ($evolucao as $ev) {
-    $labels_evolucao[] = substr($meses_pt[(int)$ev['mes']], 0, 3) . '/' . $ev['ano'];
+    $labels_evolucao[] = substr(__($meses_chave[(int)$ev['mes']]), 0, 3) . '/' . $ev['ano'];
     $dados_evolucao[] = (int)$ev['total'];
 }
 
-$titulo_pagina = 'Relatórios';
+$titulo_pagina = __('menu_relatorios');
+$nome_mes_atual = __($meses_chave[$mes]);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -163,7 +166,7 @@ $titulo_pagina = 'Relatórios';
         }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatórios — MedBoard</title>
+    <title><?= __('menu_relatorios') ?> — MedBoard</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -184,14 +187,14 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
         <div class="card">
             <div class="card-body relatorios-nav">
                 <a href="?mes=<?= $mes-1 ?>&ano=<?= $ano ?>"
-                    class="btn-secondary">‹ Mês anterior</a>
-                <h2 class="relatorios-periodo">📊 <?= $meses_pt[$mes] ?> <?= $ano ?></h2>
+                    class="btn-secondary">‹ <?= __('mes_anterior') ?></a>
+                <h2 class="relatorios-periodo">📊 <?= $nome_mes_atual ?> <?= $ano ?></h2>
                 <a href="?mes=<?= $mes+1 ?>&ano=<?= $ano ?>"
-                    class="btn-secondary">Próximo mês ›</a>
+                    class="btn-secondary"><?= __('proximo_mes') ?> ›</a>
                 <a href="relatorio_pdf.php?mes=<?= $mes ?>&ano=<?= $ano ?>"
                     target="_blank"
                     class="btn-primary">
-                      🖨️ Exportar PDF
+                      🖨️ <?= __('exportar_pdf') ?>
                 </a>
             </div>
         </div>
@@ -200,47 +203,47 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <div class="card-kpi">
                 <div class="kpi-icone">👥</div>
                 <div class="kpi-info">
-                    <span class="kpi-label">Total atendidos</span>
+                    <span class="kpi-label"><?= __('total_atendidos_kpi') ?></span>
                     <span class="kpi-valor"><?= $total_atendidos ?></span>
-                    <span class="kpi-sub"><?= $resumo['total_turnos'] ?? 0 ?> turno(s)</span>
+                    <span class="kpi-sub"><?= $resumo['total_turnos'] ?? 0 ?> <?= __('turno_s') ?></span>
                 </div>
             </div>
 
             <div class="card-kpi">
                 <div class="kpi-icone">📈</div>
                 <div class="kpi-info">
-                    <span class="kpi-label">Média por turno</span>
+                    <span class="kpi-label"><?= __('media_por_turno') ?></span>
                     <span class="kpi-valor"><?= round($resumo['media_por_turno'] ?? 0, 1) ?></span>
-                    <span class="kpi-sub">pacientes/turno</span>
+                    <span class="kpi-sub"><?= __('pacientes_turno') ?></span>
                 </div>
             </div>
 
             <div class="card-kpi">
                 <div class="kpi-icone">❌</div>
                 <div class="kpi-info">
-                    <span class="kpi-label">Taxa de falta</span>
+                    <span class="kpi-label"><?= __('taxa_de_falta') ?></span>
                     <span class="kpi-valor"><?= $taxa_falta ?>%</span>
-                    <span class="kpi-sub"><?= $total_faltas ?> falta(s)</span>
+                    <span class="kpi-sub"><?= $total_faltas ?> <?= __('falta_s') ?></span>
                 </div>
             </div>
 
             <div class="card-kpi">
                 <div class="kpi-icone">➕</div>
                 <div class="kpi-info">
-                    <span class="kpi-label">Encaixes</span>
+                    <span class="kpi-label"><?= __('encaixes') ?></span>
                     <span class="kpi-valor"><?= $resumo['total_encaixes'] ?? 0 ?></span>
-                    <span class="kpi-sub">no mês</span>
+                    <span class="kpi-sub"><?= __('no_mes') ?></span>
                 </div>
             </div>
 
             <div class="card-kpi">
                 <div class="kpi-icone">⏱</div>
                 <div class="kpi-info">
-                    <span class="kpi-label">Tempo médio</span>
+                    <span class="kpi-label"><?= __('tempo_medio') ?></span>
                     <span class="kpi-valor">
                         <?= $resumo['media_tempo'] ? round($resumo['media_tempo']) . ' min' : '—' ?>
                     </span>
-                    <span class="kpi-sub">por consulta</span>
+                    <span class="kpi-sub"><?= __('por_consulta') ?></span>
                 </div>
             </div>
         </section>
@@ -248,7 +251,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
         <div class="grid-2">
             <div class="card">
                 <div class="card-header">
-                    <h3>📅 Atendimentos por dia — <?= $meses_pt[$mes] ?></h3>
+                    <h3>📅 <?= __('atendimentos_por_dia') ?> — <?= $nome_mes_atual ?></h3>
                 </div>
                 <div class="card-body">
                     <div class="chart-box chart-box-sm">
@@ -259,7 +262,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
 
             <div class="card">
                 <div class="card-header">
-                    <h3>📆 Por dia da semana</h3>
+                    <h3>📆 <?= __('por_dia_da_semana') ?></h3>
                 </div>
                 <div class="card-body">
                     <div class="chart-box chart-box-sm">
@@ -271,7 +274,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
 
         <div class="card">
             <div class="card-header">
-                <h3>📍 Por local de trabalho</h3>
+                <h3>📍 <?= __('por_local_trabalho') ?></h3>
             </div>
             <div class="card-body">
                 <div class="chart-box chart-box-lg">
@@ -282,7 +285,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
 
         <div class="card">
             <div class="card-header">
-                <h3>📈 Evolução dos últimos 6 meses</h3>
+                <h3>📈 <?= __('evolucao_6_meses') ?></h3>
             </div>
             <div class="card-body">
                 <div class="chart-box chart-box-sm">
@@ -305,6 +308,7 @@ const dadosLocal = <?= json_encode($dados_local, JSON_UNESCAPED_UNICODE) ?>;
 const coresLocal = <?= json_encode($cores_local, JSON_UNESCAPED_UNICODE) ?>;
 const labelsEvolucao = <?= json_encode($labels_evolucao, JSON_UNESCAPED_UNICODE) ?>;
 const dadosEvolucao = <?= json_encode($dados_evolucao, JSON_UNESCAPED_UNICODE) ?>;
+const labelAtendimentos = <?= json_encode(__('label_atendimentos_chart'), JSON_UNESCAPED_UNICODE) ?>;
 
 const common = {
     responsive: true,
@@ -325,7 +329,7 @@ new Chart(document.getElementById('chartDia'), {
     data: {
         labels: labelsDia,
         datasets: [{
-            label: 'Atendimentos',
+            label: labelAtendimentos,
             data: dadosDia,
             backgroundColor: '#2A9D8F',
             borderRadius: 8,
@@ -353,7 +357,7 @@ new Chart(document.getElementById('chartSemana'), {
     data: {
         labels: labelsSemana,
         datasets: [{
-            label: 'Atendimentos',
+            label: labelAtendimentos,
             data: dadosSemana,
             backgroundColor: '#3A7BD5',
             borderRadius: 8,
@@ -378,7 +382,7 @@ new Chart(document.getElementById('chartLocal'), {
     data: {
         labels: labelsLocal,
         datasets: [{
-            label: 'Atendimentos',
+            label: labelAtendimentos,
             data: dadosLocal,
             backgroundColor: coresLocal,
             borderRadius: 8,
@@ -407,7 +411,7 @@ new Chart(document.getElementById('chartEvolucao'), {
     data: {
         labels: labelsEvolucao,
         datasets: [{
-            label: 'Atendimentos',
+            label: labelAtendimentos,
             data: dadosEvolucao,
             borderColor: '#2A9D8F',
             backgroundColor: 'rgba(42,157,143,0.12)',

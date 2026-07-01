@@ -2,6 +2,7 @@
 session_start();
 require_once '../config/database.php';
 require_once '../includes/auth_check.php';
+require_once '../includes/i18n.php';
 
 verificar_sessao();
 
@@ -23,7 +24,7 @@ if ($mes > 12) { $mes = 1;  $ano++; }
 // -----------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastrar') {
     if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
-        $erro = 'Requisição inválida. Tente novamente.';
+        $erro = __('erro_requisicao_invalida');
     } else {
 
         $data        = $_POST['data_trabalho'] ?? '';
@@ -36,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
 
         if (empty($data) || $id_local === 0 || empty($turno) || empty($hora_inicio) || empty($hora_fim)) {
 
-            $erro = 'Preencha todos os campos obrigatórios.';
+            $erro = __('erro_campos_obrigatorios');
 
         } else {
 
@@ -47,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
                 if (in_array($turno, ['noite', 'tarde/noite', 'manha/tarde/noite'])) {
                     $data_fim = date('Y-m-d', strtotime($data . ' +1 day'));
                 } else {
-                    $erro = 'O horário de fim deve ser maior que o de início para este turno.';
+                    $erro = __('erro_horario_fim_maior');
                 }
             }
 
@@ -62,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
                 $stmt->execute([$id_usuario, $id_local, $data, $hora_inicio]);
 
                 if ($stmt->fetch()) {
-                    $erro = 'Já existe um turno cadastrado nesse local, data e horário.';
+                    $erro = __('erro_turno_duplicado');
                 } else {
                     $stmt = $pdo->prepare("
                         INSERT INTO agenda_trabalho
@@ -74,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
                         $id_usuario, $id_local, $data, $data_fim, $turno,
                         $hora_inicio, $hora_fim, $status, $obs ?: null
                     ]);
-                    $sucesso = 'Turno cadastrado com sucesso!';
+                    $sucesso = __('sucesso_turno_cadastrado');
                 }
             }
         }
@@ -96,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'excluir
     if ($stmt->fetch()) {
         $pdo->prepare("DELETE FROM agenda_trabalho WHERE id_agenda = ?")
             ->execute([$id_agenda]);
-        $sucesso = 'Turno removido com sucesso!';
+        $sucesso = __('sucesso_turno_removido');
     }
 }
 
@@ -105,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'excluir
 // -----------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'atualizar') {
     if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
-        $erro = 'Requisição inválida.';
+        $erro = __('erro_requisicao_invalida');
     } else {
         $id_agenda   = (int)($_POST['id_agenda']   ?? 0);
         $id_local    = (int)($_POST['id_local']    ?? 0);
@@ -116,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'atualiz
         $obs         = trim($_POST['observacao']   ?? '');
 
         if (empty($id_local) || empty($turno) || empty($hora_inicio) || empty($hora_fim)) {
-            $erro = 'Preencha todos os campos obrigatórios.';
+            $erro = __('erro_campos_obrigatorios');
         } else {
             $data_fim = null;
             if ($hora_fim <= $hora_inicio) {
@@ -128,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'atualiz
                     $ag = $stmt->fetch();
                     $data_fim = date('Y-m-d', strtotime($ag['data_trabalho'] . ' +1 day'));
                 } else {
-                    $erro = 'Horário de fim deve ser maior que início para este turno.';
+                    $erro = __('erro_horario_fim_maior_curto');
                 }
             }
 
@@ -155,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'atualiz
                         $hora_fim, $data_fim, $status,
                         $obs ?: null, $id_agenda
                     ]);
-                    $sucesso = 'Turno atualizado com sucesso!';
+                    $sucesso = __('sucesso_turno_atualizado');
                 }
             }
         }
@@ -209,21 +210,39 @@ $stmt->execute([$id_usuario]);
 $locais = $stmt->fetchAll();
 
 // -----------------------------------------------
-// DADOS DO CALENDÁRIO
+// DADOS DO CALENDÁRIO (meses e dias traduzidos)
 // -----------------------------------------------
-$meses_pt = [
-    1  => 'Janeiro',   2  => 'Fevereiro', 3  => 'Março',
-    4  => 'Abril',     5  => 'Maio',      6  => 'Junho',
-    7  => 'Julho',     8  => 'Agosto',    9  => 'Setembro',
-    10 => 'Outubro',   11 => 'Novembro',  12 => 'Dezembro'
+$meses_chave = [
+    1 => 'mes_janeiro',   2 => 'mes_fevereiro', 3 => 'mes_marco',
+    4 => 'mes_abril',     5 => 'mes_maio',      6 => 'mes_junho',
+    7 => 'mes_julho',     8 => 'mes_agosto',    9 => 'mes_setembro',
+    10 => 'mes_outubro',  11 => 'mes_novembro', 12 => 'mes_dezembro'
 ];
+
+$dias_semana_chave = ['dia_dom','dia_seg','dia_ter','dia_qua','dia_qui','dia_sex','dia_sab'];
 
 $primeiro_dia   = mktime(0, 0, 0, $mes, 1, $ano);
 $dias_no_mes    = (int)date('t', $primeiro_dia);
 $dia_semana_ini = (int)date('w', $primeiro_dia);
-$nome_mes       = $meses_pt[$mes];
+$nome_mes       = __($meses_chave[$mes]);
 
-$titulo_pagina = 'Agenda Mensal';
+$titulo_pagina = __('agenda_mensal');
+
+$turnos_opt = [
+    'manha'             => __('turno_manha'),
+    'tarde'             => __('turno_tarde'),
+    'noite'             => __('turno_noite'),
+    'manha/tarde'       => __('turno_manha_tarde'),
+    'tarde/noite'       => __('turno_tarde_noite'),
+    'manha/tarde/noite' => __('turno_dia_inteiro'),
+];
+
+$status_opt = [
+    'agendado'  => __('agendado'),
+    'concluido' => __('concluido'),
+    'cancelado' => __('cancelado'),
+    'folga'     => __('folga'),
+];
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -235,7 +254,7 @@ $titulo_pagina = 'Agenda Mensal';
         }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda — MedBoard</title>
+    <title><?= __('agenda_mensal') ?> — MedBoard</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body class="layout">
@@ -281,8 +300,8 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                         <div class="calendario">
 
                             <!-- cabeçalho dos dias -->
-                            <?php foreach (['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'] as $d): ?>
-                                <div class="cal-cabecalho"><?= $d ?></div>
+                            <?php foreach ($dias_semana_chave as $dchave): ?>
+                                <div class="cal-cabecalho"><?= __($dchave) ?></div>
                             <?php endforeach; ?>
 
                             <!-- espaços vazios antes do dia 1 -->
@@ -338,10 +357,10 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                 <!-- FORMULÁRIO -->
                 <div class="card" <?= $turno_editar ? 'style="border: 2px solid #3b82f6;"' : '' ?>>
                     <div class="card-header">
-                        <h3><?= $turno_editar ? '✏️ Editar turno' : '➕ Cadastrar turno' ?></h3>
+                        <h3><?= $turno_editar ? '✏️ ' . __('editar_turno') : '➕ ' . __('cadastrar_turno') ?></h3>
                         <?php if ($turno_editar): ?>
                             <a href="agenda.php?mes=<?= $mes ?>&ano=<?= $ano ?>"
-                               class="btn-secondary">✕ Cancelar</a>
+                               class="btn-secondary">✕ <?= __('cancelar') ?></a>
                         <?php endif; ?>
                     </div>
                     <div class="card-body">
@@ -359,7 +378,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                             <?php endif; ?>
 
                             <div class="campo">
-                                <label>Data *</label>
+                                <label><?= __('campo_data') ?> *</label>
                                 <input type="date" name="data_trabalho"
                                        id="campo_data"
                                        value="<?= $turno_editar ? $turno_editar['data_trabalho'] : date('Y-m-d') ?>"
@@ -368,9 +387,9 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                             </div>
 
                             <div class="campo">
-                                <label>Local *</label>
+                                <label><?= __('campo_local') ?> *</label>
                                 <select name="id_local" required>
-                                 <option value="">Selecione...</option>
+                                 <option value=""><?= __('selecione') ?>...</option>
                                     <?php foreach ($locais as $l): ?>
                                         <option value="<?= $l['id_local'] ?>"
                                             <?= ($turno_editar && $turno_editar['id_local'] == $l['id_local'])
@@ -382,20 +401,10 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                             </div>
 
                             <div class="campo">
-                                <label>Turno *</label>
+                                <label><?= __('campo_turno') ?> *</label>
                                 <select name="turno" required>
-                                    <option value="">Selecione...</option>
-                                    <?php
-                                    $turnos_opt = [
-                                        'manha'             => 'Manhã',
-                                        'tarde'             => 'Tarde',
-                                        'noite'             => 'Noite',
-                                        'manha/tarde'       => 'Manhã e Tarde',
-                                        'tarde/noite'       => 'Tarde e Noite',
-                                        'manha/tarde/noite' => 'Dia inteiro',
-                                    ];
-                                    foreach ($turnos_opt as $val => $label):
-                                    ?>
+                                    <option value=""><?= __('selecione') ?>...</option>
+                                    <?php foreach ($turnos_opt as $val => $label): ?>
                                      <option value="<?= $val ?>"
                                          <?= ($turno_editar && $turno_editar['turno'] === $val)
                                                 ? 'selected' : '' ?>>
@@ -406,17 +415,9 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                             </div>
 
                             <div class="campo">
-                                <label>Status</label>
+                                <label><?= __('campo_status') ?></label>
                                 <select name="status_agenda">
-                                    <?php
-                                    $status_opt = [
-                                        'agendado'  => 'Agendado',
-                                        'concluido' => 'Concluído',
-                                        'cancelado' => 'Cancelado',
-                                        'folga'     => 'Folga',
-                                    ];
-                                    foreach ($status_opt as $val => $label):
-                                    ?>
+                                    <?php foreach ($status_opt as $val => $label): ?>
                                         <option value="<?= $val ?>"
                                             <?= ($turno_editar && $turno_editar['status_agenda'] === $val)
                                                 ? 'selected' : '' ?>>
@@ -427,7 +428,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                             </div>
 
                             <div class="campo">
-                                <label>Hora início *</label>
+                                <label><?= __('campo_hora_inicio') ?> *</label>
                                 <input type="time" name="hora_inicio" required
                                     value="<?= $turno_editar
                                            ? date('H:i', strtotime($turno_editar['hora_inicio']))
@@ -435,7 +436,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                             </div>
 
                             <div class="campo">
-                                <label>Hora fim *</label>
+                                <label><?= __('campo_hora_fim') ?> *</label>
                                 <input type="time" name="hora_fim" required
                                     value="<?= $turno_editar
                                            ? date('H:i', strtotime($turno_editar['hora_fim']))
@@ -443,15 +444,15 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                             </div>
 
                             <div class="campo campo-full">
-                                <label>Observação</label>
+                                <label><?= __('campo_observacao') ?></label>
                                 <input type="text" name="observacao"
-                                       placeholder="Ex: Sala 3, levar jaleco, 3 retornos"
+                                       placeholder="<?= __('placeholder_obs_turno') ?>"
                                        value="<?= htmlspecialchars($turno_editar['observacao'] ?? '') ?>">
                             </div>
 
                             <div class="campo campo-full">
                                 <button type="submit" class="btn-primary btn-block">
-                                    <?= $turno_editar ? '💾 Salvar alterações' : '+ Cadastrar turno' ?>
+                                    <?= $turno_editar ? '💾 ' . __('salvar_alteracoes') : '+ ' . __('cadastrar_turno') ?>
                                 </button>
                             </div>
 
@@ -462,8 +463,8 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                 <!-- LISTA DE TURNOS DO MÊS -->
                 <div class="card">
                     <div class="card-header">
-                        <h3>📋 Turnos de <?= $nome_mes ?></h3>
-                        <span class="badge badge-agendado"><?= count($turnos) ?> turno(s)</span>
+                        <h3>📋 <?= __('turnos_de') ?> <?= $nome_mes ?></h3>
+                        <span class="badge badge-agendado"><?= count($turnos) ?> <?= __('turno_s') ?></span>
                     </div>
                     <div class="card-body" id="lista-turnos">
                         <?php if ($turnos): ?>
@@ -479,8 +480,8 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                             –
                                             <?= date('H:i', strtotime($t['hora_fim'])) ?>
                                             <?php if (!empty($t['data_fim'])): ?>
-                                                <span class="badge-virada" title="Termina no dia seguinte">
-                                                    até <?= date('d/m', strtotime($t['data_fim'])) ?>
+                                                <span class="badge-virada" title="<?= __('termina_dia_seguinte') ?>">
+                                                    <?= __('ate') ?> <?= date('d/m', strtotime($t['data_fim'])) ?>
                                                 </span>
                                             <?php endif; ?>
                                         </small>
@@ -488,7 +489,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
 
                                     <div class="turno-info">
                                         <strong><?= htmlspecialchars($t['local_nome']) ?></strong>
-                                        <span><?= ucfirst(str_replace('/', ' e ', $t['turno'])) ?></span>
+                                        <span><?= $turnos_opt[$t['turno']] ?? ucfirst($t['turno']) ?></span>
                                         <?php if ($t['observacao']): ?>
                                             <small>📌 <?= htmlspecialchars($t['observacao']) ?></small>
                                         <?php endif; ?>
@@ -496,16 +497,16 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
 
                                     <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-end;">
                                         <span class="badge badge-<?= $t['status_agenda'] ?>">
-                                            <?= ucfirst($t['status_agenda']) ?>
+                                            <?= $status_opt[$t['status_agenda']] ?? ucfirst($t['status_agenda']) ?>
                                         </span>
 
                                         <a href="?editar=<?= $t['id_agenda'] ?>&mes=<?= $mes ?>&ano=<?= $ano ?>"
                                            class="btn-mini btn-info">
-                                            ✏️ Editar
+                                            ✏️ <?= __('editar') ?>
                                         </a>
 
                                         <form method="POST"
-                                              onsubmit="return confirm('Remover este turno?')">
+                                              onsubmit="return confirm('<?= __('confirmar_remover_turno') ?>')">
                                             <input type="hidden" name="csrf_token" 
                                                 value="<?= gerar_csrf_token() ?>">
                                             <input type="hidden" name="acao" value="excluir">
@@ -519,8 +520,8 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                             <?php endforeach; ?>
                         <?php else: ?>
                             <div class="vazio">
-                                Nenhum turno cadastrado em <?= $nome_mes ?>.<br>
-                                <small>Use o formulário acima para adicionar.</small>
+                                <?= __('nenhum_turno_no_mes') ?> <?= $nome_mes ?>.<br>
+                                <small><?= __('use_formulario_adicionar') ?></small>
                             </div>
                         <?php endif; ?>
                     </div>

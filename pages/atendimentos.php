@@ -2,6 +2,7 @@
 session_start();
 require_once '../config/database.php';
 require_once '../includes/auth_check.php';
+require_once '../includes/i18n.php';
 
 verificar_sessao();
 
@@ -19,11 +20,11 @@ $filtro_turno  = $_GET['turno']        ?? '';
 if ($filtro_mes < 1)  { $filtro_mes = 12; $filtro_ano--; }
 if ($filtro_mes > 12) { $filtro_mes = 1;  $filtro_ano++; }
 
-$meses_pt = [
-    1  => 'Janeiro',   2  => 'Fevereiro', 3  => 'Março',
-    4  => 'Abril',     5  => 'Maio',      6  => 'Junho',
-    7  => 'Julho',     8  => 'Agosto',    9  => 'Setembro',
-    10 => 'Outubro',   11 => 'Novembro',  12 => 'Dezembro'
+$meses_chave = [
+    1 => 'mes_janeiro',   2 => 'mes_fevereiro', 3 => 'mes_marco',
+    4 => 'mes_abril',     5 => 'mes_maio',      6 => 'mes_junho',
+    7 => 'mes_julho',     8 => 'mes_agosto',    9 => 'mes_setembro',
+    10 => 'mes_outubro',  11 => 'mes_novembro', 12 => 'mes_dezembro'
 ];
 
 $inicio_mes = sprintf('%04d-%02d-01', $filtro_ano, $filtro_mes);
@@ -138,24 +139,24 @@ $stmt->execute($params);
 $totais = $stmt->fetch();
 
 $situacoes = [
-    'realizado'              => 'Realizado',
-    'realizado_parcialmente' => 'Realizado parcialmente',
-    'nao_realizado'          => 'Não realizado',
-    'substituido'            => 'Substituído',
+    'realizado'              => __('situacao_realizado'),
+    'realizado_parcialmente' => __('situacao_parcial'),
+    'nao_realizado'          => __('situacao_nao_realizado'),
+    'substituido'            => __('situacao_substituido'),
 ];
 
 $turnos_opcoes = [
-    'manha'             => 'Manhã',
-    'tarde'             => 'Tarde',
-    'noite'             => 'Noite',
-    'manha/tarde'       => 'Manhã e Tarde',
-    'tarde/noite'       => 'Tarde e Noite',
-    'manha/tarde/noite' => 'Dia inteiro',
+    'manha'             => __('turno_manha'),
+    'tarde'             => __('turno_tarde'),
+    'noite'             => __('turno_noite'),
+    'manha/tarde'       => __('turno_manha_tarde'),
+    'tarde/noite'       => __('turno_tarde_noite'),
+    'manha/tarde/noite' => __('turno_dia_inteiro'),
 ];
 
-$dias_semana_pt = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+$dias_semana_chave = ['dia_dom','dia_seg','dia_ter','dia_qua','dia_qui','dia_sex','dia_sab'];
 
-$titulo_pagina = 'Atendimentos';
+$titulo_pagina = __('menu_atendimentos');
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -167,7 +168,7 @@ $titulo_pagina = 'Atendimentos';
         }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atendimentos — MedBoard</title>
+    <title><?= __('menu_atendimentos') ?> — MedBoard</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body class="layout">
@@ -188,11 +189,11 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
         <!-- FILTROS -->
         <div class="card">
             <div class="card-header">
-                <h3>🔍 Filtros</h3>
+                <h3>🔍 <?= __('filtros') ?></h3>
                 <div class="mes-nav">
                     <a href="?mes=<?= $filtro_mes-1 ?>&ano=<?= $filtro_ano ?>&local=<?= $filtro_local ?>&turno=<?= $filtro_turno ?>"
                        class="btn-mes">‹</a>
-                    <strong><?= $meses_pt[$filtro_mes] ?> <?= $filtro_ano ?></strong>
+                    <strong><?= __($meses_chave[$filtro_mes]) ?> <?= $filtro_ano ?></strong>
                     <a href="?mes=<?= $filtro_mes+1 ?>&ano=<?= $filtro_ano ?>&local=<?= $filtro_local ?>&turno=<?= $filtro_turno ?>"
                        class="btn-mes">›</a>
                 </div>
@@ -204,9 +205,9 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                     <input type="hidden" name="ano" value="<?= $filtro_ano ?>">
 
                     <div class="campo">
-                        <label>Local</label>
+                        <label><?= __('campo_local') ?></label>
                         <select name="local">
-                            <option value="0">Todos os locais</option>
+                            <option value="0"><?= __('todos_os_locais') ?></option>
                             <?php foreach ($locais as $l): ?>
                                 <option value="<?= $l['id_local'] ?>"
                                     <?= $filtro_local === $l['id_local'] ? 'selected' : '' ?>>
@@ -217,9 +218,9 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                     </div>
 
                     <div class="campo">
-                        <label>Turno</label>
+                        <label><?= __('campo_turno') ?></label>
                         <select name="turno">
-                            <option value="">Todos os turnos</option>
+                            <option value=""><?= __('todos_os_turnos') ?></option>
                             <?php foreach ($turnos_opcoes as $val => $label): ?>
                                 <option value="<?= $val ?>"
                                     <?= $filtro_turno === $val ? 'selected' : '' ?>>
@@ -230,9 +231,9 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                     </div>
 
                     <div class="campo" style="align-self:flex-end;">
-                        <button type="submit" class="btn-primary">Filtrar</button>
+                        <button type="submit" class="btn-primary"><?= __('filtrar') ?></button>
                         <a href="atendimentos.php" class="btn-secondary"
-                           style="margin-left:8px;">Limpar</a>
+                           style="margin-left:8px;"><?= __('limpar') ?></a>
                     </div>
 
                 </form>
@@ -245,7 +246,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <div class="card-kpi">
                 <div class="kpi-icone">📋</div>
                 <div class="kpi-info">
-                    <span class="kpi-label">Turnos registrados</span>
+                    <span class="kpi-label"><?= __('turnos_registrados') ?></span>
                     <span class="kpi-valor"><?= $totais['total_turnos'] ?? 0 ?></span>
                 </div>
             </div>
@@ -253,7 +254,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <div class="card-kpi">
                 <div class="kpi-icone">👥</div>
                 <div class="kpi-info">
-                    <span class="kpi-label">Total atendidos</span>
+                    <span class="kpi-label"><?= __('total_atendidos_kpi') ?></span>
                     <span class="kpi-valor"><?= $totais['total_atendidos'] ?? 0 ?></span>
                 </div>
             </div>
@@ -261,7 +262,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <div class="card-kpi">
                 <div class="kpi-icone">📈</div>
                 <div class="kpi-info">
-                    <span class="kpi-label">Média por turno</span>
+                    <span class="kpi-label"><?= __('media_por_turno') ?></span>
                     <span class="kpi-valor">
                         <?= round($totais['media_por_turno'] ?? 0, 1) ?>
                     </span>
@@ -271,10 +272,10 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <div class="card-kpi">
                 <div class="kpi-icone">❌</div>
                 <div class="kpi-info">
-                    <span class="kpi-label">Faltas</span>
+                    <span class="kpi-label"><?= __('faltas') ?></span>
                     <span class="kpi-valor"><?= $totais['total_faltas'] ?? 0 ?></span>
                     <span class="kpi-sub">
-                        <?= $totais['total_cancelamentos'] ?? 0 ?> cancelamento(s)
+                        <?= $totais['total_cancelamentos'] ?? 0 ?> <?= __('cancelamento_s') ?>
                     </span>
                 </div>
             </div>
@@ -282,7 +283,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <div class="card-kpi">
                 <div class="kpi-icone">➕</div>
                 <div class="kpi-info">
-                    <span class="kpi-label">Encaixes</span>
+                    <span class="kpi-label"><?= __('encaixes') ?></span>
                     <span class="kpi-valor"><?= $totais['total_encaixes'] ?? 0 ?></span>
                 </div>
             </div>
@@ -290,7 +291,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <div class="card-kpi">
                 <div class="kpi-icone">⏱</div>
                 <div class="kpi-info">
-                    <span class="kpi-label">Tempo médio</span>
+                    <span class="kpi-label"><?= __('tempo_medio') ?></span>
                     <span class="kpi-valor">
                         <?= $totais['media_tempo']
                             ? round($totais['media_tempo']) . ' min'
@@ -304,9 +305,9 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
         <!-- LISTA DE ATENDIMENTOS -->
         <div class="card">
             <div class="card-header">
-                <h3>📋 Atendimentos — <?= $meses_pt[$filtro_mes] ?> <?= $filtro_ano ?></h3>
+                <h3>📋 <?= __('menu_atendimentos') ?> — <?= __($meses_chave[$filtro_mes]) ?> <?= $filtro_ano ?></h3>
                 <span class="badge badge-agendado">
-                    <?= $total_registros ?> registro(s)
+                    <?= $total_registros ?> <?= __('registro_s') ?>
                 </span>
             </div>
             <div class="card-body">
@@ -324,7 +325,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                             <?= date('d/m/Y', strtotime($at['data_trabalho'])) ?>
                                         </strong>
                                         <span class="at-diaSemana">
-                                            <?= $dias_semana_pt[date('w', strtotime($at['data_trabalho']))] ?>
+                                            <?= __($dias_semana_chave[date('w', strtotime($at['data_trabalho']))]) ?>
                                         </span>
                                     </div>
 
@@ -336,13 +337,13 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                     </div>
 
                                     <div class="at-turno">
-                                        <?= ucfirst(str_replace('/', ' e ', $at['turno'])) ?>
+                                        <?= $turnos_opcoes[$at['turno']] ?? ucfirst($at['turno']) ?>
                                         <small>
                                             <?= date('H:i', strtotime($at['hora_inicio'])) ?>
                                             –
                                             <?= date('H:i', strtotime($at['hora_fim'])) ?>
                                             <?php if (!empty($at['data_fim'])): ?>
-                                                <span class="badge-virada">+1 dia</span>
+                                                <span class="badge-virada">+1 <?= __('dia') ?></span>
                                             <?php endif; ?>
                                         </small>
                                     </div>
@@ -359,22 +360,22 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                         <span class="at-num-valor">
                                             <?= $at['pacientes_atendidos'] ?>
                                         </span>
-                                        <span class="at-num-label">atendidos</span>
+                                        <span class="at-num-label"><?= __('label_atendidos') ?></span>
                                     </div>
 
                                     <div class="at-num-item">
                                         <span class="at-num-valor"><?= $at['faltas'] ?></span>
-                                        <span class="at-num-label">faltas</span>
+                                        <span class="at-num-label"><?= __('label_faltas') ?></span>
                                     </div>
 
                                     <div class="at-num-item">
                                         <span class="at-num-valor"><?= $at['cancelamentos'] ?></span>
-                                        <span class="at-num-label">cancelamentos</span>
+                                        <span class="at-num-label"><?= __('label_cancelamentos') ?></span>
                                     </div>
 
                                     <div class="at-num-item">
                                         <span class="at-num-valor"><?= $at['encaixes'] ?></span>
-                                        <span class="at-num-label">encaixes</span>
+                                        <span class="at-num-label"><?= __('label_encaixes') ?></span>
                                     </div>
 
                                     <?php if ($at['tempo_medio_consulta']): ?>
@@ -382,7 +383,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                             <span class="at-num-valor">
                                                 <?= $at['tempo_medio_consulta'] ?>min
                                             </span>
-                                            <span class="at-num-label">tempo médio</span>
+                                            <span class="at-num-label"><?= __('label_tempo_medio') ?></span>
                                         </div>
                                     <?php endif; ?>
 
@@ -392,7 +393,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                                 <?= floor($at['duracao_real_minutos'] / 60) ?>h
                                                 <?= $at['duracao_real_minutos'] % 60 ?>min
                                             </span>
-                                            <span class="at-num-label">duração real</span>
+                                            <span class="at-num-label"><?= __('label_duracao_real') ?></span>
                                         </div>
                                     <?php endif; ?>
 
@@ -401,7 +402,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                 <!-- HORÁRIO REAL SE DIFERENTE -->
                                 <?php if ($at['hora_real_inicio'] && $at['hora_real_fim']): ?>
                                     <div class="at-horario-real">
-                                        🕐 Horário real:
+                                        🕐 <?= __('horario_real') ?>:
                                         <?= date('H:i', strtotime($at['hora_real_inicio'])) ?>
                                         –
                                         <?= date('H:i', strtotime($at['hora_real_fim'])) ?>
@@ -421,10 +422,10 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
 
                 <?php else: ?>
                     <div class="vazio">
-                        Nenhum atendimento registrado neste período.<br>
+                        <?= __('nenhum_atendimento_periodo') ?><br>
                         <small>
-                            Tente outro mês ou
-                            <a href="registro_dia.php">lance um registro →</a>
+                            <?= __('tente_outro_mes_ou') ?>
+                            <a href="registro_dia.php"><?= __('lance_um_registro') ?></a>
                         </small>
                     </div>
                 <?php endif; ?>
@@ -433,17 +434,17 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                     <div class="paginacao">
                         <?php if ($pagina_atual > 1): ?>
                             <a href="?mes=<?= $filtro_mes ?>&ano=<?= $filtro_ano ?>&local=<?= $filtro_local ?>&turno=<?= $filtro_turno ?>&pagina=<?= $pagina_atual - 1 ?>"
-                               class="btn-pagina">‹ Anterior</a>
+                               class="btn-pagina">‹ <?= __('anterior') ?></a>
                         <?php endif; ?>
 
                         <span class="pagina-info">
-                            Página <?= $pagina_atual ?> de <?= $total_paginas ?>
-                            (<?= $total_registros ?> registros)
+                            <?= __('pagina') ?> <?= $pagina_atual ?> <?= __('de') ?> <?= $total_paginas ?>
+                            (<?= $total_registros ?> <?= __('registros_minusculo') ?>)
                         </span>
 
                         <?php if ($pagina_atual < $total_paginas): ?>
                             <a href="?mes=<?= $filtro_mes ?>&ano=<?= $filtro_ano ?>&local=<?= $filtro_local ?>&turno=<?= $filtro_turno ?>&pagina=<?= $pagina_atual + 1 ?>"
-                               class="btn-pagina">Próxima ›</a>
+                               class="btn-pagina"><?= __('proxima') ?> ›</a>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>

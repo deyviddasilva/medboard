@@ -2,6 +2,7 @@
 session_start();
 require_once '../config/database.php';
 require_once '../includes/auth_check.php';
+require_once '../includes/i18n.php';
 
 verificar_sessao();
 
@@ -15,7 +16,7 @@ $sucesso    = '';
 // -----------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'salvar') {
     if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
-        $erro = 'Requisição inválida. Tente novamente.';
+        $erro = __('erro_requisicao_invalida');
     } else {
 
         $id_agenda           = (int)($_POST['id_agenda'] ?? 0);
@@ -30,9 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'salvar'
         $obs                 = trim($_POST['observacao'] ?? '');
 
         if ($id_agenda === 0) {
-            $erro = 'Selecione um turno para registrar.';
+            $erro = __('erro_selecione_turno');
         } elseif ($pacientes_atendidos < 0 || $faltas < 0 || $cancelamentos < 0 || $encaixes < 0) {
-            $erro = 'Os valores não podem ser negativos.';
+            $erro = __('erro_valores_negativos');
         } else {
 
             // verifica se o turno pertence ao usuário
@@ -43,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'salvar'
             $stmt->execute([$id_agenda, $id_usuario]);
 
             if (!$stmt->fetch()) {
-                $erro = 'Turno inválido.';
+                $erro = __('erro_turno_invalido');
              } else {
 
                 // calcula duração real se os horários forem informados
@@ -85,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'salvar'
                         $duracao_real, $situacao, $obs ?: null,
                         $id_agenda
                     ]);
-                    $sucesso = 'Registro atualizado com sucesso!';
+                    $sucesso = __('sucesso_registro_atualizado');
                 } else {
                     // INSERE
                     $stmt = $pdo->prepare("
@@ -101,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'salvar'
                         $hora_real_inicio ?: null, $hora_real_fim ?: null,
                         $duracao_real, $situacao, $obs ?: null
                     ]);
-                    $sucesso = 'Registro salvo com sucesso!';
+                    $sucesso = __('sucesso_registro_salvo');
                 }
 
                 // atualiza status da agenda para concluido
@@ -139,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'excluir
             WHERE id_agenda = ?
         ")->execute([$reg['id_agenda']]);
 
-        $sucesso = 'Registro removido com sucesso!';
+        $sucesso = __('sucesso_registro_removido');
     }
 }
 
@@ -196,13 +197,22 @@ if (!empty($_GET['id_agenda'])) {
     $preload = $stmt->fetch();
 }
 
-$titulo_pagina = 'Registro do Dia';
+$titulo_pagina = __('registro_do_dia');
 
 $situacoes = [
-    'realizado'              => 'Realizado',
-    'realizado_parcialmente' => 'Realizado parcialmente',
-    'nao_realizado'          => 'Não realizado',
-    'substituido'            => 'Substituído',
+    'realizado'              => __('situacao_realizado'),
+    'realizado_parcialmente' => __('situacao_parcial'),
+    'nao_realizado'          => __('situacao_nao_realizado'),
+    'substituido'            => __('situacao_substituido'),
+];
+
+$turnos_label = [
+    'manha'             => __('turno_manha'),
+    'tarde'             => __('turno_tarde'),
+    'noite'             => __('turno_noite'),
+    'manha/tarde'       => __('turno_manha_tarde'),
+    'tarde/noite'       => __('turno_tarde_noite'),
+    'manha/tarde/noite' => __('turno_dia_inteiro'),
 ];
 ?>
 <!DOCTYPE html>
@@ -215,7 +225,7 @@ $situacoes = [
         }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro do Dia — MedBoard</title>
+    <title><?= __('registro_do_dia') ?> — MedBoard</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body class="layout">
@@ -246,14 +256,14 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <div class="registro-esquerda">
                 <div class="card">
                     <div class="card-header">
-                        <h3>📝 Lançar registro do turno</h3>
+                        <h3>📝 <?= __('lancar_registro_turno') ?></h3>
                     </div>
                     <div class="card-body">
 
                         <?php if (empty($turnos_pendentes) && !$preload): ?>
                             <div class="vazio">
-                                Nenhum turno pendente de registro. 🎉<br>
-                                <small>Todos os turnos passados já foram lançados.</small>
+                                <?= __('nenhum_turno_pendente_registro') ?> 🎉<br>
+                                <small><?= __('todos_turnos_lancados') ?></small>
                             </div>
                         <?php else: ?>
 
@@ -264,10 +274,10 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
 
                             <!-- SELEÇÃO DO TURNO -->
                             <div class="campo campo-full">
-                                <label>Turno *</label>
+                                <label><?= __('campo_turno') ?> *</label>
                                 <select name="id_agenda" id="select_turno" required
                                         onchange="preencherHorarios(this)">
-                                    <option value="">Selecione o turno...</option>
+                                    <option value=""><?= __('selecione_turno') ?>...</option>
 
                                     <?php if ($preload): ?>
                                         <option value="<?= $preload['id_agenda'] ?>"
@@ -276,9 +286,9 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                                 selected>
                                             <?= date('d/m/Y', strtotime($preload['data_trabalho'])) ?>
                                             — <?= htmlspecialchars($preload['local_nome']) ?>
-                                            (<?= ucfirst($preload['turno']) ?>
+                                            (<?= $turnos_label[$preload['turno']] ?? ucfirst($preload['turno']) ?>
                                             <?= date('H:i', strtotime($preload['hora_inicio'])) ?>
-                                            às
+                                            <?= __('as') ?>
                                             <?= date('H:i', strtotime($preload['hora_fim'])) ?>)
                                         </option>
                                     <?php endif; ?>
@@ -290,9 +300,9 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                                 data-fim="<?= $tp['hora_fim'] ?>">
                                             <?= date('d/m/Y', strtotime($tp['data_trabalho'])) ?>
                                             — <?= htmlspecialchars($tp['local_nome']) ?>
-                                            (<?= ucfirst($tp['turno']) ?>
+                                            (<?= $turnos_label[$tp['turno']] ?? ucfirst($tp['turno']) ?>
                                             <?= date('H:i', strtotime($tp['hora_inicio'])) ?>
-                                            às
+                                            <?= __('as') ?>
                                             <?= date('H:i', strtotime($tp['hora_fim'])) ?>)
                                         </option>
                                     <?php endforeach; ?>
@@ -302,43 +312,43 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
 
                             <!-- CONTADORES -->
                             <div class="campo">
-                                <label>Pacientes atendidos</label>
+                                <label><?= __('pacientes_atendidos') ?></label>
                                 <input type="number" name="pacientes_atendidos"
                                        min="0" value="<?= $preload['pacientes_atendidos'] ?? 0 ?>"
                                        class="input-numero">
                             </div>
 
                             <div class="campo">
-                                <label>Faltas</label>
+                                <label><?= __('faltas') ?></label>
                                 <input type="number" name="faltas"
                                        min="0" value="<?= $preload['faltas'] ?? 0 ?>"
                                        class="input-numero">
                             </div>
 
                             <div class="campo">
-                                <label>Cancelamentos</label>
+                                <label><?= __('cancelamentos') ?></label>
                                 <input type="number" name="cancelamentos"
                                        min="0" value="<?= $preload['cancelamentos'] ?? 0 ?>"
                                        class="input-numero">
                             </div>
 
                             <div class="campo">
-                                <label>Encaixes</label>
+                                <label><?= __('encaixes') ?></label>
                                 <input type="number" name="encaixes"
                                        min="0" value="<?= $preload['encaixes'] ?? 0 ?>"
                                        class="input-numero">
                             </div>
 
                             <div class="campo">
-                                <label>Tempo médio por consulta (min)</label>
+                                <label><?= __('tempo_medio_consulta') ?></label>
                                 <input type="number" name="tempo_medio_consulta"
-                                       min="1" placeholder="Ex: 20"
+                                       min="1" placeholder="<?= __('placeholder_tempo') ?>"
                                        value="<?= $preload['tempo_medio_consulta'] ?? '' ?>"
                                        class="input-numero">
                             </div>
 
                             <div class="campo">
-                                <label>Situação do dia</label>
+                                <label><?= __('situacao_do_dia') ?></label>
                                 <select name="situacao_dia">
                                     <?php foreach ($situacoes as $val => $label): ?>
                                         <option value="<?= $val ?>"
@@ -351,14 +361,14 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
 
                             <!-- HORÁRIOS REAIS -->
                             <div class="campo">
-                                <label>Hora real de início</label>
+                                <label><?= __('hora_real_inicio') ?></label>
                                 <input type="time" name="hora_real_inicio"
                                        id="hora_real_inicio"
                                        value="<?= $preload['hora_real_inicio'] ?? '' ?>">
                             </div>
 
                             <div class="campo">
-                                <label>Hora real de fim</label>
+                                <label><?= __('hora_real_fim') ?></label>
                                 <input type="time" name="hora_real_fim"
                                        id="hora_real_fim"
                                        value="<?= $preload['hora_real_fim'] ?? '' ?>">
@@ -366,15 +376,15 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
 
                             <!-- OBSERVAÇÃO -->
                             <div class="campo campo-full">
-                                <label>Observação do dia</label>
+                                <label><?= __('observacao_do_dia') ?></label>
                                 <textarea name="observacao" rows="3"
-                                          placeholder="Ex: Unidade lotada, faltou material, saí 30min mais tarde..."
+                                          placeholder="<?= __('placeholder_obs_dia') ?>"
                                 ><?= htmlspecialchars($preload['observacao'] ?? '') ?></textarea>
                             </div>
 
                             <div class="campo campo-full">
                                 <button type="submit" class="btn-primary btn-block">
-                                    💾 Salvar registro
+                                    💾 <?= __('salvar_registro') ?>
                                 </button>
                             </div>
 
@@ -390,8 +400,8 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <div class="registro-direita">
                 <div class="card">
                     <div class="card-header">
-                        <h3>📋 Últimos registros</h3>
-                        <span class="badge badge-agendado"><?= count($registros) ?> registro(s)</span>
+                        <h3>📋 <?= __('ultimos_registros') ?></h3>
+                        <span class="badge badge-agendado"><?= count($registros) ?> <?= __('registro_s') ?></span>
                     </div>
                     <div class="card-body">
 
@@ -415,20 +425,20 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                     <div class="registro-numeros">
                                         <div class="num-item">
                                             <span class="num-valor"><?= $r['pacientes_atendidos'] ?></span>
-                                            <span class="num-label">atendidos</span>
+                                            <span class="num-label"><?= __('label_atendidos') ?></span>
                                         </div>
                                         <div class="num-item">
                                             <span class="num-valor"><?= $r['faltas'] ?></span>
-                                            <span class="num-label">faltas</span>
+                                            <span class="num-label"><?= __('label_faltas') ?></span>
                                         </div>
                                         <div class="num-item">
                                             <span class="num-valor"><?= $r['encaixes'] ?></span>
-                                            <span class="num-label">encaixes</span>
+                                            <span class="num-label"><?= __('label_encaixes') ?></span>
                                         </div>
                                         <?php if ($r['tempo_medio_consulta']): ?>
                                         <div class="num-item">
                                             <span class="num-valor"><?= $r['tempo_medio_consulta'] ?>min</span>
-                                            <span class="num-label">tempo médio</span>
+                                            <span class="num-label"><?= __('label_tempo_medio') ?></span>
                                         </div>
                                         <?php endif; ?>
                                     </div>
@@ -444,18 +454,18 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                         <!-- EDITAR -->
                                         <a href="?id_agenda=<?= $r['id_agenda'] ?>"
                                            class="btn-mini btn-info">
-                                            ✏️ Editar
+                                            ✏️ <?= __('editar') ?>
                                         </a>
 
                                         <!-- EXCLUIR -->
                                         <form method="POST"
-                                              onsubmit="return confirm('Remover este registro?')">
+                                              onsubmit="return confirm('<?= __('confirmar_remover_registro') ?>')">
                                             <input type="hidden" name="csrf_token" 
                                                 value="<?= gerar_csrf_token() ?>">
                                             <input type="hidden" name="acao" value="excluir">
                                             <input type="hidden" name="id_registro"
                                                    value="<?= $r['id_registro'] ?>">
-                                            <button class="btn-mini btn-danger">🗑 Remover</button>
+                                            <button class="btn-mini btn-danger">🗑 <?= __('remover') ?></button>
                                         </form>
 
                                     </div>
@@ -464,8 +474,8 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                             <?php endforeach; ?>
                         <?php else: ?>
                             <div class="vazio">
-                                Nenhum registro lançado ainda.<br>
-                                <small>Use o formulário ao lado para começar.</small>
+                                <?= __('nenhum_registro_lancado') ?><br>
+                                <small><?= __('use_formulario_lado') ?></small>
                             </div>
                         <?php endif; ?>
 

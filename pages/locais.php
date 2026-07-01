@@ -2,6 +2,7 @@
 session_start();
 require_once '../config/database.php';
 require_once '../includes/auth_check.php';
+require_once '../includes/i18n.php';
 
 verificar_sessao();
 
@@ -15,7 +16,7 @@ $sucesso    = '';
 // -----------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastrar') {
     if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
-        $erro = 'Requisição inválida. Tente novamente.';
+        $erro = __('erro_requisicao_invalida');
     } else {
 
         $nome    = trim($_POST['nome']    ?? '');
@@ -26,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
         $cor     = $_POST['cor_identificacao'] ?? '#3B82F6';
 
         if (empty($nome) || empty($cidade)) {
-            $erro = 'Nome e cidade são obrigatórios.';
+            $erro = __('erro_nome_cidade_obrigatorios');
         } else {
             $stmt = $pdo->prepare("
                 INSERT INTO locais_trabalho 
@@ -37,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
                 $id_usuario, $nome, $endereco ?: null,
                 $bairro ?: null, $cidade, $obs ?: null, $cor
             ]);
-            $sucesso = 'Local cadastrado com sucesso!';
+            $sucesso = __('sucesso_local_cadastrado');
         }
     }
 }
@@ -47,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
 // -----------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'excluir') {
     if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
-        $erro = 'Requisição inválida. Tente novamente.';
+        $erro = __('erro_requisicao_invalida');
     } else {
 
         $id_local = (int)($_POST['id_local'] ?? 0);
@@ -63,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'excluir
             if ($stmt->fetch()) {
                 $pdo->prepare("DELETE FROM locais_trabalho WHERE id_local = ?")
                     ->execute([$id_local]);
-                $sucesso = 'Local removido com sucesso!';
+                $sucesso = __('sucesso_local_removido');
             }
         }
     }
@@ -74,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'excluir
 // -----------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'toggle') {
     if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
-        $erro = 'Requisição inválida. Tente novamente.';
+        $erro = __('erro_requisicao_invalida');
     } else {
         $id_local = (int)($_POST['id_local'] ?? 0);
 
@@ -89,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'toggle'
             $novo_status = $local['ativo'] ? 0 : 1;
             $pdo->prepare("UPDATE locais_trabalho SET ativo = ? WHERE id_local = ?")
                 ->execute([$novo_status, $id_local]);
-            $sucesso = $novo_status ? 'Local ativado!' : 'Local desativado!';
+            $sucesso = $novo_status ? __('sucesso_local_ativado') : __('sucesso_local_desativado');
         }
     }
 }
@@ -99,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'toggle'
 // -----------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'atualizar') {
     if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
-        $erro = 'Requisição inválida.';
+        $erro = __('erro_requisicao_invalida');
     } else {
         $id_local = (int)($_POST['id_local'] ?? 0);
         $nome     = trim($_POST['nome']      ?? '');
@@ -110,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'atualiz
         $cor      = $_POST['cor_identificacao'] ?? '#3B82F6';
 
         if (empty($nome) || empty($cidade)) {
-            $erro = 'Nome e cidade são obrigatórios.';
+            $erro = __('erro_nome_cidade_obrigatorios');
         } else {
             $stmt = $pdo->prepare("
                 SELECT id_local FROM locais_trabalho
@@ -135,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'atualiz
                     $obs      ?: null,
                     $cor, $id_local
                 ]);
-                $sucesso = 'Local atualizado com sucesso!';
+                $sucesso = __('sucesso_local_atualizado');
             }
         }
     }
@@ -163,7 +164,7 @@ $stmt = $pdo->prepare("
 $stmt->execute([$id_usuario]);
 $locais = $stmt->fetchAll();
 
-$titulo_pagina = 'Locais de Trabalho';
+$titulo_pagina = __('menu_locais');
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -175,7 +176,7 @@ $titulo_pagina = 'Locais de Trabalho';
         }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Locais — MedBoard</title>
+    <title><?= __('menu_locais') ?> — MedBoard</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body class="layout">
@@ -204,8 +205,8 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
         <?php if ($local_editar): ?>
         <div class="card" style="border: 2px solid #3b82f6;">
             <div class="card-header">
-                <h3>✏️ Editando: <?= htmlspecialchars($local_editar['nome']) ?></h3>
-                <a href="locais.php" class="btn-secondary">✕ Cancelar</a>
+                <h3>✏️ <?= __('editando') ?>: <?= htmlspecialchars($local_editar['nome']) ?></h3>
+                <a href="locais.php" class="btn-secondary">✕ <?= __('cancelar') ?></a>
             </div>
             <div class="card-body">
                 <form method="POST" action="" class="form-grid">
@@ -216,31 +217,31 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                            value="<?= gerar_csrf_token() ?>">
 
                     <div class="campo">
-                        <label>Nome do local *</label>
+                        <label><?= __('nome_do_local') ?> *</label>
                         <input type="text" name="nome" required
                                value="<?= htmlspecialchars($local_editar['nome']) ?>">
                     </div>
 
                     <div class="campo">
-                        <label>Cidade *</label>
+                        <label><?= __('campo_cidade') ?> *</label>
                         <input type="text" name="cidade" required
                                value="<?= htmlspecialchars($local_editar['cidade']) ?>">
                     </div>
 
                     <div class="campo">
-                        <label>Bairro</label>
+                        <label><?= __('campo_bairro') ?></label>
                         <input type="text" name="bairro"
                                value="<?= htmlspecialchars($local_editar['bairro'] ?? '') ?>">
                     </div>
 
                     <div class="campo">
-                        <label>Endereço</label>
+                        <label><?= __('campo_endereco') ?></label>
                         <input type="text" name="endereco"
                                value="<?= htmlspecialchars($local_editar['endereco'] ?? '') ?>">
                     </div>
 
                     <div class="campo campo-cor">
-                        <label>Cor de identificação</label>
+                        <label><?= __('cor_identificacao') ?></label>
                         <div class="cor-grupo">
                             <input type="color" name="cor_identificacao"
                                    value="<?= $local_editar['cor_identificacao'] ?>">
@@ -248,14 +249,14 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                     </div>
 
                     <div class="campo campo-full">
-                        <label>Observação</label>
+                        <label><?= __('campo_observacao') ?></label>
                         <input type="text" name="observacao"
                                value="<?= htmlspecialchars($local_editar['observacao'] ?? '') ?>">
                     </div>
 
                     <div class="campo campo-full">
                         <button type="submit" class="btn-primary">
-                            💾 Salvar alterações
+                            💾 <?= __('salvar_alteracoes') ?>
                         </button>
                     </div>
                 </form>
@@ -266,7 +267,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
         <!-- FORMULÁRIO DE CADASTRO -->
         <div class="card">
             <div class="card-header">
-                <h3>📍 Novo local de trabalho</h3>
+                <h3>📍 <?= __('novo_local_trabalho') ?></h3>
             </div>
             <div class="card-body">
                 <form method="POST" action="" class="form-grid">
@@ -275,49 +276,49 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                     <input type="hidden" name="acao" value="cadastrar">
 
                     <div class="campo">
-                        <label>Nome do local *</label>
+                        <label><?= __('nome_do_local') ?> *</label>
                         <input type="text" name="nome" 
-                               placeholder="Ex: UBS Paulista, Hospital Central"
+                               placeholder="<?= __('placeholder_nome_local') ?>"
                                required>
                     </div>
 
                     <div class="campo">
-                        <label>Cidade *</label>
+                        <label><?= __('campo_cidade') ?> *</label>
                         <input type="text" name="cidade" 
-                               placeholder="Ex: Recife"
+                               placeholder="<?= __('placeholder_cidade') ?>"
                                required>
                     </div>
 
                     <div class="campo">
-                        <label>Bairro</label>
+                        <label><?= __('campo_bairro') ?></label>
                         <input type="text" name="bairro" 
-                               placeholder="Ex: Boa Viagem">
+                               placeholder="<?= __('placeholder_bairro') ?>">
                     </div>
 
                     <div class="campo">
-                        <label>Endereço</label>
+                        <label><?= __('campo_endereco') ?></label>
                         <input type="text" name="endereco" 
-                               placeholder="Ex: Rua das Flores, 123">
+                               placeholder="<?= __('placeholder_endereco') ?>">
                     </div>
 
                     <div class="campo campo-cor">
-                        <label>Cor de identificação</label>
+                        <label><?= __('cor_identificacao') ?></label>
                         <div class="cor-grupo">
                             <input type="color" name="cor_identificacao" 
                                    value="#3B82F6" id="cor_input">
-                            <span class="cor-dica">Cada local terá uma cor no calendário</span>
+                            <span class="cor-dica"><?= __('dica_cor_calendario') ?></span>
                         </div>
                     </div>
 
                     <div class="campo campo-full">
-                        <label>Observação</label>
+                        <label><?= __('campo_observacao') ?></label>
                         <input type="text" name="observacao" 
-                               placeholder="Ex: Levar jaleco, Sala 3, Estacionamento grátis">
+                               placeholder="<?= __('placeholder_obs_local') ?>">
                     </div>
 
                     <div class="campo campo-full">
                         <button type="submit" class="btn-primary">
-                            + Cadastrar local
+                            + <?= __('cadastrar_local') ?>
                         </button>
                     </div>
                 </form>
@@ -327,8 +328,8 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
         <!-- LISTA DE LOCAIS -->
         <div class="card">
             <div class="card-header">
-                <h3>📋 Locais cadastrados</h3>
-                <span class="badge badge-agendado"><?= count($locais) ?> local(is)</span>
+                <h3>📋 <?= __('locais_cadastrados') ?></h3>
+                <span class="badge badge-agendado"><?= count($locais) ?> <?= __('local_is') ?></span>
             </div>
             <div class="card-body">
                 <?php if ($locais): ?>
@@ -358,7 +359,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                     <!-- EDITAR -->
                                     <a href="?editar=<?= $l['id_local'] ?>"
                                        class="btn-mini btn-info">
-                                        ✏️ Editar
+                                        ✏️ <?= __('editar') ?>
                                     </a>
 
                                     <!-- ATIVAR / DESATIVAR -->
@@ -368,18 +369,18 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                         <input type="hidden" name="csrf_token" value="<?= gerar_csrf_token() ?>">
                                         <button type="submit"
                                                 class="btn-mini <?= $l['ativo'] ? 'btn-warning' : 'btn-success' ?>">
-                                            <?= $l['ativo'] ? '⏸ Desativar' : '▶ Ativar' ?>
+                                            <?= $l['ativo'] ? '⏸ ' . __('desativar') : '▶ ' . __('ativar') ?>
                                         </button>
                                     </form>
 
                                     <!-- EXCLUIR -->
                                     <form method="POST" style="display:inline"
-                                          onsubmit="return confirm('Tem certeza? Isso removerá o local.')">
+                                          onsubmit="return confirm('<?= __('confirmar_remover_local') ?>')">
                                         <input type="hidden" name="acao" value="excluir">
                                         <input type="hidden" name="id_local" value="<?= $l['id_local'] ?>">
                                         <input type="hidden" name="csrf_token" value="<?= gerar_csrf_token() ?>">
                                         <button type="submit" class="btn-mini btn-danger">
-                                            🗑 Excluir
+                                            🗑 <?= __('excluir') ?>
                                         </button>
                                     </form>
                                 </div>
@@ -389,8 +390,8 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                     </div>
                 <?php else: ?>
                     <div class="vazio">
-                        Nenhum local cadastrado ainda.<br>
-                        <small>Cadastre o primeiro local acima para começar.</small>
+                        <?= __('nenhum_local_cadastrado') ?><br>
+                        <small><?= __('cadastre_primeiro_local') ?></small>
                     </div>
                 <?php endif; ?>
             </div>

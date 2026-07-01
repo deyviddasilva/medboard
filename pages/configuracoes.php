@@ -2,6 +2,7 @@
 session_start();
 require_once '../config/database.php';
 require_once '../includes/auth_check.php';
+require_once '../includes/i18n.php';
 
 verificar_sessao();
 
@@ -20,13 +21,13 @@ $usuario = $stmt->fetch();
 // -----------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'dados') {
     if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
-        $erro = 'Requisição inválida.';
+        $erro = __('erro_requisicao_invalida');
     } else {
         $nome  = trim($_POST['nome']  ?? '');
         $email = trim($_POST['email'] ?? '');
 
         if (empty($nome) || empty($email)) {
-            $erro = 'Nome e e-mail são obrigatórios.';
+            $erro = __('erro_nome_email_obrigatorios');
         } else {
             // verifica se email já existe em outro usuário
             $stmt = $pdo->prepare("
@@ -36,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'dados')
             $stmt->execute([$email, $id_usuario]);
 
             if ($stmt->fetch()) {
-                $erro = 'Este e-mail já está em uso.';
+                $erro = __('erro_email_em_uso');
             } else {
                 $pdo->prepare("
                     UPDATE usuarios SET nome = ?, email = ?
@@ -44,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'dados')
                 ")->execute([$nome, $email, $id_usuario]);
 
                 $_SESSION['nome'] = $nome;
-                $sucesso = 'Dados atualizados com sucesso!';
+                $sucesso = __('sucesso_dados_atualizados');
 
                 // recarrega usuário
                 $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE id_usuario = ?");
@@ -60,31 +61,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'dados')
 // -----------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'senha') {
     if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
-        $erro = 'Requisição inválida.';
+        $erro = __('erro_requisicao_invalida');
     } else {
         $senha_atual = $_POST['senha_atual']     ?? '';
         $nova_senha  = $_POST['nova_senha']      ?? '';
         $confirmacao = $_POST['confirmar_senha'] ?? '';
 
         if (empty($senha_atual) || empty($nova_senha) || empty($confirmacao)) {
-            $erro = 'Preencha todos os campos de senha.';
+            $erro = __('erro_preencha_campos_senha');
         } elseif (!password_verify($senha_atual, $usuario['senha'])) {
-            $erro = 'Senha atual incorreta.';
+            $erro = __('erro_senha_atual_incorreta');
         } elseif (strlen($nova_senha) < 6) {
-            $erro = 'A nova senha deve ter pelo menos 6 caracteres.';
+            $erro = __('erro_senha_minimo_6');
         } elseif ($nova_senha !== $confirmacao) {
-            $erro = 'A confirmação não confere com a nova senha.';
+            $erro = __('erro_confirmacao_nao_confere');
         } else {
             $hash = password_hash($nova_senha, PASSWORD_DEFAULT);
             $pdo->prepare("
                 UPDATE usuarios SET senha = ? WHERE id_usuario = ?
             ")->execute([$hash, $id_usuario]);
-            $sucesso = 'Senha alterada com sucesso!';
+            $sucesso = __('sucesso_senha_alterada');
         }
     }
 }
 
-$titulo_pagina = 'Configurações';
+// -----------------------------------------------
+// AÇÃO: ALTERAR IDIOMA
+// -----------------------------------------------
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'idioma') {
+    if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
+        $erro = __('erro_requisicao_invalida');
+    } else {
+        $novo_idioma = $_POST['idioma'] ?? 'pt-br';
+
+        if (!in_array($novo_idioma, ['pt-br', 'es'])) {
+            $erro = __('erro_idioma_invalido');
+        } else {
+            $pdo->prepare("
+                UPDATE usuarios SET idioma = ? WHERE id_usuario = ?
+            ")->execute([$novo_idioma, $id_usuario]);
+
+            $_SESSION['idioma'] = $novo_idioma;
+
+            // recarrega traduções imediatamente com o novo idioma
+            $GLOBALS['traducoes'] = carregar_idioma();
+
+            // recarrega usuário
+            $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE id_usuario = ?");
+            $stmt->execute([$id_usuario]);
+            $usuario = $stmt->fetch();
+
+            $sucesso = __('sucesso_idioma_alterado');
+        }
+    }
+}
+
+$titulo_pagina = __('menu_configuracoes');
+
+$idiomas_disponiveis = [
+    'pt-br' => __('idioma_portugues'),
+    'es'    => __('idioma_espanhol'),
+];
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -96,7 +133,7 @@ $titulo_pagina = 'Configurações';
         }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configurações — MedBoard</title>
+    <title><?= __('menu_configuracoes') ?> — MedBoard</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body class="layout">
@@ -126,7 +163,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <!-- DADOS PESSOAIS -->
             <div class="card">
                 <div class="card-header">
-                    <h3>👩‍⚕️ Dados pessoais</h3>
+                    <h3>👩‍⚕️ <?= __('dados_pessoais') ?></h3>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="" class="form-grid">
@@ -135,20 +172,52 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                value="<?= gerar_csrf_token() ?>">
 
                         <div class="campo campo-full">
-                            <label>Nome completo *</label>
+                            <label><?= __('nome_completo') ?> *</label>
                             <input type="text" name="nome" required
                                    value="<?= htmlspecialchars($usuario['nome']) ?>">
                         </div>
 
                         <div class="campo campo-full">
-                            <label>E-mail *</label>
+                            <label><?= __('campo_email') ?> *</label>
                             <input type="email" name="email" required
                                    value="<?= htmlspecialchars($usuario['email']) ?>">
                         </div>
 
                         <div class="campo campo-full">
                             <button type="submit" class="btn-primary">
-                                💾 Salvar dados
+                                💾 <?= __('salvar_dados') ?>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- IDIOMA -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>🌎 <?= __('idioma_do_sistema') ?></h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="" class="form-grid">
+                        <input type="hidden" name="acao" value="idioma">
+                        <input type="hidden" name="csrf_token"
+                               value="<?= gerar_csrf_token() ?>">
+
+                        <div class="campo campo-full">
+                            <label><?= __('selecione_idioma') ?></label>
+                            <select name="idioma">
+                                <?php foreach ($idiomas_disponiveis as $val => $label): ?>
+                                    <option value="<?= $val ?>"
+                                        <?= strtolower($usuario['idioma'] ?? 'pt-br') === $val ? 'selected' : '' ?>>
+                                        <?= $label ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="campo campo-full">
+                            <button type="submit" class="btn-primary">
+                                🌎 <?= __('aplicar_idioma') ?>
                             </button>
                         </div>
                     </form>
@@ -158,7 +227,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <!-- ALTERAR SENHA -->
             <div class="card">
                 <div class="card-header">
-                    <h3>🔒 Alterar senha</h3>
+                    <h3>🔒 <?= __('alterar_senha') ?></h3>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="" class="form-grid">
@@ -167,7 +236,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                value="<?= gerar_csrf_token() ?>">
 
                         <div class="campo campo-full">
-                            <label>Senha atual *</label>
+                            <label><?= __('senha_atual') ?> *</label>
                             <div class="input-com-icone">
                                 <input type="password" name="senha_atual"
                                        id="senha_atual"
@@ -180,11 +249,11 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                         </div>
 
                         <div class="campo">
-                            <label>Nova senha *</label>
+                            <label><?= __('nova_senha') ?> *</label>
                             <div class="input-com-icone">
                                 <input type="password" name="nova_senha"
                                        id="nova_senha"
-                                       placeholder="mínimo 6 caracteres" required>
+                                       placeholder="<?= __('placeholder_minimo_6') ?>" required>
                                 <button type="button"
                                         onclick="toggleCampoSenha('nova_senha', this)">
                                     👁
@@ -193,7 +262,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                         </div>
 
                         <div class="campo">
-                            <label>Confirmar nova senha *</label>
+                            <label><?= __('confirmar_nova_senha') ?> *</label>
                             <div class="input-com-icone">
                                 <input type="password" name="confirmar_senha"
                                        id="confirmar_senha"
@@ -207,7 +276,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
 
                         <div class="campo campo-full">
                             <button type="submit" class="btn-primary">
-                                🔒 Alterar senha
+                                🔒 <?= __('alterar_senha') ?>
                             </button>
                         </div>
                     </form>
@@ -217,28 +286,34 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <!-- INFORMAÇÕES DO SISTEMA -->
             <div class="card">
                 <div class="card-header">
-                    <h3>ℹ️ Informações do sistema</h3>
+                    <h3>ℹ️ <?= __('informacoes_sistema') ?></h3>
                 </div>
                 <div class="card-body">
                     <div class="info-sistema">
                         <div class="info-item">
-                            <span class="info-label">Sistema</span>
-                            <span class="info-valor">MedBoard v2.0</span>
+                            <span class="info-label"><?= __('sistema') ?></span>
+                            <span class="info-valor">MedBoard v3.0</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Usuária</span>
+                            <span class="info-label"><?= __('usuaria') ?></span>
                             <span class="info-valor">
                                 <?= htmlspecialchars($usuario['nome']) ?>
                             </span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Conta criada em</span>
+                            <span class="info-label"><?= __('idioma_atual') ?></span>
+                            <span class="info-valor">
+                                <?= $idiomas_disponiveis[strtolower($usuario['idioma'] ?? 'pt-br')] ?? '—' ?>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label"><?= __('conta_criada_em') ?></span>
                             <span class="info-valor">
                                 <?= date('d/m/Y', strtotime($usuario['criado_em'])) ?>
                             </span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Última atualização</span>
+                            <span class="info-label"><?= __('ultima_atualizacao') ?></span>
                             <span class="info-valor">
                                 <?= date('d/m/Y H:i', strtotime($usuario['atualizado_em'])) ?>
                             </span>

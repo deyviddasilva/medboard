@@ -2,6 +2,7 @@
 session_start();
 require_once '../config/database.php';
 require_once '../includes/auth_check.php';
+require_once '../includes/i18n.php';
 
 verificar_sessao();
 
@@ -15,7 +16,7 @@ $sucesso    = '';
 // -----------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastrar') {
     if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
-        $erro = 'Requisição inválida.';
+        $erro = __('erro_requisicao_invalida');
     } else {
         $titulo = trim($_POST['titulo']    ?? '');
         $data   = $_POST['data_lembrete'] ?? '';
@@ -23,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
         $desc   = trim($_POST['descricao'] ?? '');
 
         if (empty($titulo) || empty($data)) {
-            $erro = 'Título e data são obrigatórios.';
+            $erro = __('erro_titulo_data_obrigatorios');
         } else {
             $pdo->prepare("
                 INSERT INTO lembretes
@@ -34,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
                 $desc ?: null, $data,
                 $hora ?: null
             ]);
-            $sucesso = 'Lembrete cadastrado!';
+            $sucesso = __('sucesso_lembrete_cadastrado');
         }
     }
 }
@@ -44,14 +45,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
 // -----------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'concluir') {
     if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
-        $erro = 'Requisição inválida.';
+        $erro = __('erro_requisicao_invalida');
     } else {
         $id = (int)($_POST['id_lembrete'] ?? 0);
         $pdo->prepare("
             UPDATE lembretes SET status_lembrete = 'concluido'
             WHERE id_lembrete = ? AND id_usuario = ?
         ")->execute([$id, $id_usuario]);
-        $sucesso = 'Lembrete concluído!';
+        $sucesso = __('sucesso_lembrete_concluido');
     }
 }
 
@@ -60,14 +61,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'conclui
 // -----------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'excluir') {
     if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
-        $erro = 'Requisição inválida.';
+        $erro = __('erro_requisicao_invalida');
     } else {
         $id = (int)($_POST['id_lembrete'] ?? 0);
         $pdo->prepare("
             DELETE FROM lembretes
             WHERE id_lembrete = ? AND id_usuario = ?
         ")->execute([$id, $id_usuario]);
-        $sucesso = 'Lembrete removido!';
+        $sucesso = __('sucesso_lembrete_removido');
     }
 }
 
@@ -94,7 +95,7 @@ $stmt = $pdo->prepare("
 $stmt->execute([$id_usuario]);
 $concluidos = $stmt->fetchAll();
 
-$titulo_pagina = 'Lembretes';
+$titulo_pagina = __('menu_lembretes');
 $hoje = date('Y-m-d');
 ?>
 <!DOCTYPE html>
@@ -107,7 +108,7 @@ $hoje = date('Y-m-d');
         }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lembretes — MedBoard</title>
+    <title><?= __('menu_lembretes') ?> — MedBoard</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body class="layout">
@@ -137,7 +138,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <!-- FORMULÁRIO -->
             <div class="card">
                 <div class="card-header">
-                    <h3>🔔 Novo lembrete</h3>
+                    <h3>🔔 <?= __('novo_lembrete') ?></h3>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="" class="form-grid">
@@ -146,31 +147,31 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                value="<?= gerar_csrf_token() ?>">
 
                         <div class="campo campo-full">
-                            <label>Título *</label>
+                            <label><?= __('campo_titulo') ?> *</label>
                             <input type="text" name="titulo" required
-                                   placeholder="Ex: Renovar CRM, Reunião de equipe">
+                                   placeholder="<?= __('placeholder_titulo_lembrete') ?>">
                         </div>
 
                         <div class="campo">
-                            <label>Data *</label>
+                            <label><?= __('campo_data') ?> *</label>
                             <input type="date" name="data_lembrete"
                                    value="<?= $hoje ?>" required>
                         </div>
 
                         <div class="campo">
-                            <label>Hora</label>
+                            <label><?= __('campo_hora') ?></label>
                             <input type="time" name="hora_lembrete">
                         </div>
 
                         <div class="campo campo-full">
-                            <label>Descrição</label>
+                            <label><?= __('campo_descricao') ?></label>
                             <textarea name="descricao" rows="3"
-                                      placeholder="Detalhes do lembrete..."></textarea>
+                                      placeholder="<?= __('placeholder_descricao_lembrete') ?>"></textarea>
                         </div>
 
                         <div class="campo campo-full">
                             <button type="submit" class="btn-primary btn-block">
-                                + Adicionar lembrete
+                                + <?= __('adicionar_lembrete') ?>
                             </button>
                         </div>
                     </form>
@@ -180,7 +181,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <!-- LEMBRETES PENDENTES -->
             <div class="card">
                 <div class="card-header">
-                    <h3>⏳ Pendentes</h3>
+                    <h3>⏳ <?= __('pendentes') ?></h3>
                     <span class="badge badge-agendado">
                         <?= count($pendentes) ?>
                     </span>
@@ -197,12 +198,12 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                     <span>
                                         <?= date('d/m/Y', strtotime($l['data_lembrete'])) ?>
                                         <?= $l['hora_lembrete']
-                                            ? 'às ' . date('H:i', strtotime($l['hora_lembrete']))
+                                            ? __('as') . ' ' . date('H:i', strtotime($l['hora_lembrete']))
                                             : '' ?>
                                         <?php if ($atrasado): ?>
-                                            <span class="badge badge-cancelado">Atrasado</span>
+                                            <span class="badge badge-cancelado"><?= __('atrasado') ?></span>
                                         <?php elseif ($e_hoje): ?>
-                                            <span class="badge badge-folga">Hoje</span>
+                                            <span class="badge badge-folga"><?= __('hoje') ?></span>
                                         <?php endif; ?>
                                     </span>
                                     <?php if ($l['descricao']): ?>
@@ -218,24 +219,24 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                         <input type="hidden" name="csrf_token"
                                                value="<?= gerar_csrf_token() ?>">
                                         <button class="btn-mini btn-success"
-                                                title="Marcar como concluído">✅</button>
+                                                title="<?= __('marcar_concluido') ?>">✅</button>
                                     </form>
 
                                     <form method="POST" style="display:inline"
-                                          onsubmit="return confirm('Remover lembrete?')">
+                                          onsubmit="return confirm('<?= __('confirmar_remover_lembrete') ?>')">
                                         <input type="hidden" name="acao" value="excluir">
                                         <input type="hidden" name="id_lembrete"
                                                value="<?= $l['id_lembrete'] ?>">
                                         <input type="hidden" name="csrf_token"
                                                value="<?= gerar_csrf_token() ?>">
                                         <button class="btn-mini btn-danger"
-                                                title="Remover">🗑</button>
+                                                title="<?= __('remover') ?>">🗑</button>
                                     </form>
                                 </div>
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <div class="vazio">Nenhum lembrete pendente. ✅</div>
+                        <div class="vazio"><?= __('nenhum_lembrete_pendente') ?> ✅</div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -246,7 +247,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
         <?php if ($concluidos): ?>
         <div class="card">
             <div class="card-header">
-                <h3>✅ Concluídos recentemente</h3>
+                <h3>✅ <?= __('concluidos_recentemente') ?></h3>
             </div>
             <div class="card-body">
                 <?php foreach ($concluidos as $l): ?>
@@ -256,7 +257,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                             <span><?= date('d/m/Y', strtotime($l['data_lembrete'])) ?></span>
                         </div>
                         <form method="POST"
-                              onsubmit="return confirm('Remover lembrete?')">
+                              onsubmit="return confirm('<?= __('confirmar_remover_lembrete') ?>')">
                             <input type="hidden" name="acao" value="excluir">
                             <input type="hidden" name="id_lembrete"
                                    value="<?= $l['id_lembrete'] ?>">

@@ -3,6 +3,14 @@ session_start();
 require_once '../config/database.php';
 require_once '../includes/mailer.php';
 
+// idioma antes do login
+if (empty($_SESSION['idioma'])) {
+    $lang_browser = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'pt', 0, 2);
+    $_SESSION['idioma'] = ($lang_browser === 'es') ? 'es' : 'pt-br';
+}
+
+require_once '../includes/i18n.php';
+
 $pdo     = conectar();
 $erro    = '';
 $sucesso = '';
@@ -10,24 +18,22 @@ $sucesso = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
-        $erro = 'Requisição inválida. Tente novamente.';
+        $erro = __('erro_requisicao_invalida');
     } else {
 
         $email = trim($_POST['email'] ?? '');
 
         if (empty($email)) {
-            $erro = 'Informe seu e-mail.';
+            $erro = __('esqueci_erro_informe_email');
         } else {
 
             $stmt = $pdo->prepare("SELECT id_usuario, nome FROM usuarios WHERE email = ?");
             $stmt->execute([$email]);
             $usuario = $stmt->fetch();
 
-            // por segurança, sempre mostra a mesma mensagem,
-            // mesmo se o e-mail não existir no banco
             if ($usuario) {
-                $token   = bin2hex(random_bytes(32));
-                $expira  = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+                $token  = bin2hex(random_bytes(32));
+                $expira = date('Y-m-d H:i:s', strtotime('+10 minutes'));
 
                 $pdo->prepare("
                     UPDATE usuarios 
@@ -42,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 enviar_email_recuperacao($email, $usuario['nome'], $link);
             }
 
-            $sucesso = 'Se este e-mail estiver cadastrado, você receberá um link de recuperação em breve.';
+            $sucesso = __('esqueci_sucesso_link_enviado');
         }
     }
 }
@@ -51,13 +57,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>
         if (localStorage.getItem('medboard-tema') === 'dark') {
             document.documentElement.classList.add('dark-preload');
         }
     </script>
-    <title>Recuperar Senha — MedBoard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= __('esqueci_titulo') ?> — MedBoard</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body class="login-body">
@@ -71,7 +77,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
 
         <div class="login-logo">
             <h1>🩺 MedBoard</h1>
-            <p>Recuperação de senha</p>
+            <p><?= __('esqueci_subtitulo') ?></p>
         </div>
 
         <?php if ($erro): ?>
@@ -83,27 +89,27 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
         <?php else: ?>
 
         <p style="color: var(--color-text-muted); font-size: 13px; margin-bottom: 18px;">
-            Informe o e-mail cadastrado. Enviaremos um link para você redefinir sua senha.
+            <?= __('esqueci_instrucao') ?>
         </p>
 
         <form method="POST" action="">
             <input type="hidden" name="csrf_token" value="<?= gerar_csrf_token() ?>">
 
             <div class="campo">
-                <label for="email">E-mail</label>
+                <label for="email"><?= __('campo_email') ?></label>
                 <input type="email" id="email" name="email"
                        placeholder="seu@email.com" required autofocus>
             </div>
 
             <button type="submit" class="btn-primary btn-block">
-                Enviar link de recuperação
+                <?= __('esqueci_btn_enviar') ?>
             </button>
         </form>
 
         <?php endif; ?>
 
         <p style="text-align:center; margin-top: 20px; font-size: 13px;">
-            <a href="login.php">← Voltar para o login</a>
+            <a href="login.php">← <?= __('esqueci_voltar_login') ?></a>
         </p>
 
     </div>

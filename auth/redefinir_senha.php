@@ -2,10 +2,18 @@
 session_start();
 require_once '../config/database.php';
 
-$pdo     = conectar();
-$erro    = '';
+// idioma antes do login
+if (empty($_SESSION['idioma'])) {
+    $lang_browser = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'pt', 0, 2);
+    $_SESSION['idioma'] = ($lang_browser === 'es') ? 'es' : 'pt-br';
+}
+
+require_once '../includes/i18n.php';
+
+$pdo   = conectar();
+$erro  = '';
 $sucesso = '';
-$token   = $_GET['token'] ?? $_POST['token'] ?? '';
+$token = $_GET['token'] ?? $_POST['token'] ?? '';
 
 // valida o token
 $stmt = $pdo->prepare("
@@ -19,25 +27,25 @@ $usuario = $stmt->fetch();
 $token_valido = $usuario && strtotime($usuario['reset_token_expira']) > time();
 
 if (!$token_valido) {
-    $erro = 'Este link é inválido ou já expirou. Solicite um novo.';
+    $erro = __('redefinir_erro_link_invalido');
 }
 
 // processa a nova senha
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $token_valido) {
 
     if (!validar_csrf_token($_POST['csrf_token'] ?? '')) {
-        $erro = 'Requisição inválida. Tente novamente.';
+        $erro = __('erro_requisicao_invalida');
     } else {
 
         $nova_senha  = $_POST['nova_senha']      ?? '';
         $confirmacao = $_POST['confirmar_senha'] ?? '';
 
         if (empty($nova_senha) || empty($confirmacao)) {
-            $erro = 'Preencha todos os campos.';
+            $erro = __('erro_campos_obrigatorios');
         } elseif (strlen($nova_senha) < 6) {
-            $erro = 'A senha deve ter pelo menos 6 caracteres.';
+            $erro = __('erro_senha_minimo_6');
         } elseif ($nova_senha !== $confirmacao) {
-            $erro = 'As senhas não coincidem.';
+            $erro = __('redefinir_erro_senhas_nao_coincidem');
         } else {
             $hash = password_hash($nova_senha, PASSWORD_DEFAULT);
 
@@ -47,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $token_valido) {
                 WHERE id_usuario = ?
             ")->execute([$hash, $usuario['id_usuario']]);
 
-            $sucesso = 'Senha redefinida com sucesso! Você já pode fazer login.';
+            $sucesso = __('redefinir_sucesso');
         }
     }
 }
@@ -56,13 +64,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $token_valido) {
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>
         if (localStorage.getItem('medboard-tema') === 'dark') {
             document.documentElement.classList.add('dark-preload');
         }
     </script>
-    <title>Redefinir Senha — MedBoard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= __('redefinir_titulo') ?> — MedBoard</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body class="login-body">
@@ -76,7 +84,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
 
         <div class="login-logo">
             <h1>🩺 MedBoard</h1>
-            <p>Criar nova senha</p>
+            <p><?= __('redefinir_subtitulo') ?></p>
         </div>
 
         <?php if ($erro): ?>
@@ -86,8 +94,9 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
         <?php if ($sucesso): ?>
             <div class="alerta alerta-sucesso"><?= htmlspecialchars($sucesso) ?></div>
             <p style="text-align:center; margin-top: 16px;">
-                <a href="login.php" class="btn-primary btn-block" style="text-decoration:none; text-align:center;">
-                    Ir para o login
+                <a href="login.php" class="btn-primary btn-block"
+                   style="text-decoration:none; text-align:center;">
+                    <?= __('redefinir_ir_login') ?>
                 </a>
             </p>
         <?php elseif ($token_valido): ?>
@@ -97,16 +106,16 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                 <input type="hidden" name="csrf_token" value="<?= gerar_csrf_token() ?>">
 
                 <div class="campo">
-                    <label for="nova_senha">Nova senha</label>
+                    <label for="nova_senha"><?= __('nova_senha') ?></label>
                     <div class="input-com-icone">
                         <input type="password" id="nova_senha" name="nova_senha"
-                               placeholder="mínimo 6 caracteres" required>
+                               placeholder="<?= __('placeholder_minimo_6') ?>" required>
                         <button type="button" onclick="toggleCampo('nova_senha', this)">👁</button>
                     </div>
                 </div>
 
                 <div class="campo">
-                    <label for="confirmar_senha">Confirmar nova senha</label>
+                    <label for="confirmar_senha"><?= __('confirmar_nova_senha') ?></label>
                     <div class="input-com-icone">
                         <input type="password" id="confirmar_senha" name="confirmar_senha"
                                placeholder="••••••••" required>
@@ -115,13 +124,13 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                 </div>
 
                 <button type="submit" class="btn-primary btn-block">
-                    Redefinir senha
+                    <?= __('redefinir_btn') ?>
                 </button>
             </form>
 
         <?php else: ?>
             <p style="text-align:center; margin-top: 16px;">
-                <a href="esqueci_senha.php">Solicitar novo link →</a>
+                <a href="esqueci_senha.php"><?= __('redefinir_solicitar_novo_link') ?></a>
             </p>
         <?php endif; ?>
 

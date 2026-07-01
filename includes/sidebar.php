@@ -13,41 +13,41 @@ $pagina_atual = basename($_SERVER['PHP_SELF']);
     <nav class="sidebar-nav">
         <a href="/sistema_medico/index.php"
            class="nav-item <?= $pagina_atual === 'index.php' ? 'ativo' : '' ?>">
-            <span class="nav-icon">🏠</span> Home
+            <span class="nav-icon">🏠</span> <?= __('menu_home') ?>
         </a>
         <a href="/sistema_medico/pages/agenda.php"
            class="nav-item <?= $pagina_atual === 'agenda.php' ? 'ativo' : '' ?>">
-            <span class="nav-icon">📅</span> Agenda
+            <span class="nav-icon">📅</span> <?= __('menu_agenda') ?>
         </a>
         <a href="/sistema_medico/pages/registro_dia.php"
            class="nav-item <?= $pagina_atual === 'registro_dia.php' ? 'ativo' : '' ?>">
-            <span class="nav-icon">📝</span> Registro do dia
+            <span class="nav-icon">📝</span> <?= __('menu_registro') ?>
         </a>
         <a href="/sistema_medico/pages/atendimentos.php"
            class="nav-item <?= $pagina_atual === 'atendimentos.php' ? 'ativo' : '' ?>">
-            <span class="nav-icon">👥</span> Atendimentos
+            <span class="nav-icon">👥</span> <?= __('menu_atendimentos') ?>
         </a>
         <a href="/sistema_medico/pages/locais.php"
            class="nav-item <?= $pagina_atual === 'locais.php' ? 'ativo' : '' ?>">
-            <span class="nav-icon">📍</span> Locais
+            <span class="nav-icon">📍</span> <?= __('menu_locais') ?>
         </a>
         <a href="/sistema_medico/pages/relatorios.php"
            class="nav-item <?= $pagina_atual === 'relatorios.php' ? 'ativo' : '' ?>">
-            <span class="nav-icon">📊</span> Relatórios
+            <span class="nav-icon">📊</span> <?= __('menu_relatorios') ?>
         </a>
     </nav>
 
     <div class="sidebar-footer">
         <a href="/sistema_medico/pages/lembretes.php"
            class="nav-item <?= $pagina_atual === 'lembretes.php' ? 'ativo' : '' ?>">
-            <span class="nav-icon">🔔</span> Lembretes
+            <span class="nav-icon">🔔</span> <?= __('menu_lembretes') ?>
         </a>
         <a href="/sistema_medico/pages/configuracoes.php"
            class="nav-item <?= $pagina_atual === 'configuracoes.php' ? 'ativo' : '' ?>">
-            <span class="nav-icon">⚙️</span> Configurações
+            <span class="nav-icon">⚙️</span> <?= __('menu_configuracoes') ?>
         </a>
         <a href="/sistema_medico/auth/logout.php" class="nav-item sair">
-            <span class="nav-icon">🚪</span> Sair
+            <span class="nav-icon">🚪</span> <?= __('sair') ?>
         </a>
     </div>
 
@@ -62,14 +62,14 @@ $pagina_atual = basename($_SERVER['PHP_SELF']);
     <span class="mobile-pagina">
         <?php
         $nomes = [
-            'index.php'          => 'Home',
-            'agenda.php'         => 'Agenda',
-            'registro_dia.php'   => 'Registro do Dia',
-            'atendimentos.php'   => 'Atendimentos',
-            'locais.php'         => 'Locais',
-            'relatorios.php'     => 'Relatórios',
-            'lembretes.php'      => 'Lembretes',
-            'configuracoes.php'  => 'Configurações',
+            'index.php'          => __('menu_home'),
+            'agenda.php'         => __('menu_agenda'),
+            'registro_dia.php'   => __('menu_registro'),
+            'atendimentos.php'   => __('menu_atendimentos'),
+            'locais.php'         => __('menu_locais'),
+            'relatorios.php'     => __('menu_relatorios'),
+            'lembretes.php'      => __('menu_lembretes'),
+            'configuracoes.php'  => __('menu_configuracoes'),
         ];
         echo $nomes[$pagina_atual] ?? 'MedBoard';
         ?>
@@ -82,30 +82,30 @@ $pagina_atual = basename($_SERVER['PHP_SELF']);
     <a href="/sistema_medico/index.php"
        class="mobile-nav-item <?= $pagina_atual === 'index.php' ? 'ativo' : '' ?>">
         <span class="mobile-nav-icon">🏠</span>
-        <span>Início</span>
+        <span><?= __('menu_home') ?></span>
     </a>
 
     <a href="/sistema_medico/pages/agenda.php"
        class="mobile-nav-item <?= $pagina_atual === 'agenda.php' ? 'ativo' : '' ?>">
         <span class="mobile-nav-icon">📅</span>
-        <span>Agenda</span>
+        <span><?= __('menu_agenda') ?></span>
     </a>
 
     <a href="/sistema_medico/pages/registro_dia.php"
        class="mobile-nav-item <?= $pagina_atual === 'registro_dia.php' ? 'ativo' : '' ?>">
         <span class="mobile-nav-icon">📝</span>
-        <span>Registro</span>
+        <span><?= __('menu_registro') ?></span>
     </a>
 
     <a href="/sistema_medico/pages/atendimentos.php"
        class="mobile-nav-item <?= $pagina_atual === 'atendimentos.php' ? 'ativo' : '' ?>">
         <span class="mobile-nav-icon">👥</span>
-        <span>Atendimentos</span>
+        <span><?= __('menu_atendimentos') ?></span>
     </a>
 
     <button class="mobile-nav-item" onclick="toggleMaisMenu()" id="btn-mais">
         <span class="mobile-nav-icon">☰</span>
-        <span>Mais</span>
+        <span><?= __('menu_mais') ?></span>
     </button>
 
 </nav>
@@ -116,7 +116,7 @@ $pagina_atual = basename($_SERVER['PHP_SELF']);
 <div class="mobile-mais-painel" id="mais-painel">
 
     <div class="mobile-mais-header">
-        <span>Menu</span>
+        <span><?= __('menu_titulo') ?></span>
         <button onclick="fecharMaisMenu()" class="mobile-mais-fechar">✕</button>
     </div>
 
@@ -124,27 +124,27 @@ $pagina_atual = basename($_SERVER['PHP_SELF']);
 
         <a href="/sistema_medico/pages/locais.php"
            class="mobile-mais-item <?= $pagina_atual === 'locais.php' ? 'ativo' : '' ?>">
-            <span>📍</span> Locais de trabalho
+            <span>📍</span> <?= __('menu_locais') ?>
         </a>
 
         <a href="/sistema_medico/pages/relatorios.php"
            class="mobile-mais-item <?= $pagina_atual === 'relatorios.php' ? 'ativo' : '' ?>">
-            <span>📊</span> Relatórios
+            <span>📊</span> <?= __('menu_relatorios') ?>
         </a>
 
         <a href="/sistema_medico/pages/lembretes.php"
            class="mobile-mais-item <?= $pagina_atual === 'lembretes.php' ? 'ativo' : '' ?>">
-            <span>🔔</span> Lembretes
+            <span>🔔</span> <?= __('menu_lembretes') ?>
         </a>
 
         <a href="/sistema_medico/pages/configuracoes.php"
            class="mobile-mais-item <?= $pagina_atual === 'configuracoes.php' ? 'ativo' : '' ?>">
-            <span>⚙️</span> Configurações
+            <span>⚙️</span> <?= __('menu_configuracoes') ?>
         </a>
 
         <a href="/sistema_medico/auth/logout.php"
            class="mobile-mais-item sair">
-            <span>🚪</span> Sair
+            <span>🚪</span> <?= __('sair') ?>
         </a>
 
     </div>

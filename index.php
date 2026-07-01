@@ -2,6 +2,7 @@
 session_start();
 require_once 'config/database.php';
 require_once 'includes/auth_check.php';
+require_once 'includes/i18n.php';
 
 verificar_sessao();
 
@@ -139,8 +140,7 @@ $meses_pt = [
     9=>'Set', 10=>'Out', 11=>'Nov', 12=>'Dez'
 ];
 
-
-$titulo_pagina = 'Home';
+$titulo_pagina = __('home');
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -152,7 +152,7 @@ $titulo_pagina = 'Home';
         }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home — MedBoard</title>
+    <title><?= __('home') ?> — MedBoard</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="layout">
@@ -173,7 +173,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
         <!-- LEMBRETES DO DIA -->
         <?php if ($lembretes_hoje): ?>
             <div class="alerta alerta-lembrete">
-                📌 <strong>Lembrete(s) de hoje:</strong>
+                <?= __('lembretes_hoje') ?>
                 <?php foreach ($lembretes_hoje as $lem): ?>
                     <?= htmlspecialchars($lem['titulo']) ?>
                     <?= $lem['hora_lembrete'] ? '(' . date('H:i', strtotime($lem['hora_lembrete'])) . ')' : '' ?>
@@ -185,8 +185,8 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
         <!-- AVISO DE REGISTRO PENDENTE -->
         <?php if ($pendentes_hoje > 0): ?>
             <div class="alerta alerta-aviso">
-                ⚠️ Você tem <strong><?= $pendentes_hoje ?> turno(s) hoje sem registro lançado.</strong>
-                <a href="pages/registro_dia.php" class="link-alerta">Lançar agora →</a>
+                ⚠️ <strong><?= $pendentes_hoje ?> <?= __('turnos_sem_registro') ?></strong>
+                <a href="pages/registro_dia.php" class="link-alerta"><?= __('lancar_agora') ?></a>
             </div>
         <?php endif; ?>
 
@@ -196,7 +196,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <div class="card-kpi">
                 <div class="kpi-icone">📍</div>
                 <div class="kpi-info">
-                    <span class="kpi-label">Trabalho hoje em</span>
+                    <span class="kpi-label"><?= __('trabalho_hoje_em') ?></span>
                     <?php if ($turnos_hoje): ?>
                         <?php foreach ($turnos_hoje as $t): ?>
                             <span class="kpi-valor"
@@ -206,7 +206,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                             </span>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <span class="kpi-valor">Folga hoje 🎉</span>
+                        <span class="kpi-valor"><?= __('folga_hoje') ?></span>
                     <?php endif; ?>
                 </div>
             </div>
@@ -214,7 +214,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <div class="card-kpi">
                 <div class="kpi-icone">🕐</div>
                 <div class="kpi-info">
-                    <span class="kpi-label">Próximo turno</span>
+                    <span class="kpi-label"><?= __('proximo_turno') ?></span>
                     <?php if ($proximo_turno): ?>
                         <span class="kpi-valor">
                             <?= date('H:i', strtotime($proximo_turno['hora_inicio'])) ?>
@@ -224,7 +224,7 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                         </span>
                     <?php else: ?>
                         <span class="kpi-valor">—</span>
-                        <span class="kpi-sub">Nenhum pendente</span>
+                        <span class="kpi-sub"><?= __('nenhum_turno_pendente') ?></span>
                     <?php endif; ?>
                 </div>
             </div>
@@ -232,13 +232,13 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <div class="card-kpi">
                 <div class="kpi-icone">👥</div>
                 <div class="kpi-info">
-                    <span class="kpi-label">Atendidos hoje</span>
+                    <span class="kpi-label"><?= __('atendidos_hoje') ?></span>
                     <span class="kpi-valor">
-                        <?= $resumo_hoje['total_atendidos'] ?? 0 ?> pacientes
+                        <?= $resumo_hoje['total_atendidos'] ?? 0 ?> <?= __('pacientes') ?>
                     </span>
                     <?php if (($resumo_hoje['total_encaixes'] ?? 0) > 0): ?>
                         <span class="kpi-sub">
-                            +<?= $resumo_hoje['total_encaixes'] ?> encaixe(s)
+                            +<?= $resumo_hoje['total_encaixes'] ?> <?= __('encaixe') ?>
                         </span>
                     <?php endif; ?>
                 </div>
@@ -247,13 +247,13 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <div class="card-kpi">
                 <div class="kpi-icone">❌</div>
                 <div class="kpi-info">
-                    <span class="kpi-label">Faltas hoje</span>
+                    <span class="kpi-label"><?= __('faltas_hoje') ?></span>
                     <span class="kpi-valor">
-                        <?= $resumo_hoje['total_faltas'] ?? 0 ?> paciente(s)
+                        <?= $resumo_hoje['total_faltas'] ?? 0 ?> <?= __('paciente_singular') ?>
                     </span>
                     <?php if (($resumo_hoje['total_cancelamentos'] ?? 0) > 0): ?>
                         <span class="kpi-sub">
-                            <?= $resumo_hoje['total_cancelamentos'] ?> cancelamento(s)
+                            <?= $resumo_hoje['total_cancelamentos'] ?> <?= __('cancelamento') ?>
                         </span>
                     <?php endif; ?>
                 </div>
@@ -262,12 +262,12 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
             <div class="card-kpi">
                 <div class="kpi-icone">📈</div>
                 <div class="kpi-info">
-                    <span class="kpi-label">Total da semana</span>
+                    <span class="kpi-label"><?= __('total_semana') ?></span>
                     <span class="kpi-valor">
-                        <?= $resumo_semana['total_semana'] ?? 0 ?> pacientes
+                        <?= $resumo_semana['total_semana'] ?? 0 ?> <?= __('pacientes') ?>
                     </span>
                     <span class="kpi-sub">
-                        <?= $resumo_semana['dias_trabalhados'] ?? 0 ?> dia(s) lançados
+                        <?= $resumo_semana['dias_trabalhados'] ?? 0 ?> <?= __('dias_lancados') ?>
                     </span>
                 </div>
             </div>
@@ -279,8 +279,8 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
 
             <div class="card">
                 <div class="card-header">
-                    <h3>📅 Agenda de hoje</h3>
-                    <a href="pages/agenda.php" class="link-ver-mais">Ver agenda →</a>
+                    <h3>📅 <?= __('agenda_de_hoje') ?></h3>
+                    <a href="pages/agenda.php" class="link-ver-mais"><?= __('ver_agenda') ?></a>
                 </div>
                 <div class="card-body">
                     <?php if ($turnos_hoje): ?>
@@ -308,20 +308,20 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                                 </div>
                                 <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
                                     <span class="badge badge-<?= $t['status_agenda'] ?>">
-                                        <?= ucfirst($t['status_agenda']) ?>
+                                        <?= __($t['status_agenda']) ?>
                                     </span>
                                     <a href="pages/registro_dia.php?id_agenda=<?= $t['id_agenda'] ?>"
                                        class="btn-mini btn-success">
-                                        + Registrar
+                                        <?= __('registrar') ?>
                                     </a>
                                 </div>
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <div class="vazio">
-                            Nenhum turno hoje.<br>
+                            <?= __('nenhum_turno_hoje') ?><br>
                             <small>
-                                <a href="pages/agenda.php">Adicionar turno →</a>
+                                <a href="pages/agenda.php"><?= __('adicionar_turno') ?></a>
                             </small>
                         </div>
                     <?php endif; ?>
@@ -330,8 +330,8 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
 
             <div class="card">
                 <div class="card-header">
-                    <h3>🗓️ Próximos plantões</h3>
-                    <a href="pages/agenda.php" class="link-ver-mais">Ver todos →</a>
+                    <h3>🗓️ <?= __('proximos_plantoes') ?></h3>
+                    <a href="pages/agenda.php" class="link-ver-mais"><?= __('ver_todos') ?></a>
                 </div>
                 <div class="card-body">
                     <?php if ($proximos_plantoes): ?>
@@ -359,9 +359,9 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <div class="vazio">
-                            Nenhum plantão nos próximos dias.<br>
+                            <?= __('nenhum_plantao') ?><br>
                             <small>
-                                <a href="pages/agenda.php">Adicionar plantão →</a>
+                                <a href="pages/agenda.php"><?= __('adicionar_plantao_link') ?></a>
                             </small>
                         </div>
                     <?php endif; ?>
@@ -373,8 +373,8 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
         <!-- BLOCO 3: GRÁFICO DA SEMANA -->
         <div class="card">
             <div class="card-header">
-                <h3>📊 Atendimentos da semana</h3>
-                <a href="pages/relatorios.php" class="link-ver-mais">Ver relatório →</a>
+                <h3>📊 <?= __('atendimentos_semana') ?></h3>
+                <a href="pages/relatorios.php" class="link-ver-mais"><?= __('ver_relatorio') ?></a>
             </div>
             <div class="card-body">
                 <div class="grafico-barras">
@@ -407,16 +407,16 @@ if (localStorage.getItem('medboard-tema') === 'dark') {
         <!-- BLOCO 4: AÇÕES RÁPIDAS -->
         <section class="acoes-rapidas">
             <a href="pages/registro_dia.php" class="btn-primary">
-                + Registrar pacientes
+                <?= __('registrar_pacientes') ?>
             </a>
             <a href="pages/agenda.php" class="btn-secondary">
-                + Adicionar plantão
+                <?= __('adicionar_plantao') ?>
             </a>
             <a href="pages/relatorios.php" class="btn-secondary">
-                📊 Ver relatório
+                <?= __('ver_relatorio_btn') ?>
             </a>
             <a href="pages/locais.php" class="btn-secondary">
-                📍 Gerenciar locais
+                <?= __('gerenciar_locais') ?>
             </a>
         </section>
 
