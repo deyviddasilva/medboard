@@ -110,3 +110,5 @@ define('SMTP_USER', 'gdeyvid16@gmail.com');      // ← troque pelo seu e-mail
 define('SMTP_PASS', 'jrsu semg nmzo mqsp');     // ← troque pela senha de app (16 caracteres)
 define('SMTP_PORT', 587);
 define('SMTP_FROM_NAME', 'MedBoard');
+
+date_default_timezone_set('America/Sao_Paulo'); // define o fuso horário do Brasil para conscistência no servidor
